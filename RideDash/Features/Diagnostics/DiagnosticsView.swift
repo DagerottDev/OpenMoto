@@ -10,7 +10,7 @@ struct DiagnosticsView: View {
     @AppStorage("dash.test.firmware") private var dashFirmware = ""
     @AppStorage("dash.test.ssid") private var dashSSID = ""
     @AppStorage("dash.test.host") private var dashHost = "192.168.1.1"
-    @AppStorage("dash.test.port") private var dashPort = 5000
+    @AppStorage("dash.test.port") private var dashPort = 2000
 
     @State private var passphrase = ""
 
@@ -112,13 +112,13 @@ struct DiagnosticsView: View {
             TextField("Display host", text: $dashHost)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-            TextField("UDP port", value: $dashPort, format: .number)
+            TextField("UDP control port", value: $dashPort, format: .number)
                 .keyboardType(.numberPad)
 
             Button("Open UDP Route") {
                 do {
                     try transport.start(host: dashHost, port: UInt16(clamping: dashPort))
-                    log.append("Opening UDP route to \(dashHost):\(dashPort)", category: "udp")
+                    log.append("Opening UDP control route to \(dashHost):\(dashPort)", category: "udp")
                 } catch {
                     log.append(error.localizedDescription, category: "udp", level: .error)
                 }
@@ -134,7 +134,7 @@ struct DiagnosticsView: View {
         } header: {
             Text("UDP diagnostic route")
         } footer: {
-            Text("This screen is intentionally transport-only. Use Settings → Connection & Projection for authentication, navigation-mode control and H.264/RTP projection.")
+            Text("The default is the public-reference control port (2000). This screen is transport-only; use Settings → Connection & Projection for authentication, navigation control and H.264/RTP projection.")
         }
     }
 
