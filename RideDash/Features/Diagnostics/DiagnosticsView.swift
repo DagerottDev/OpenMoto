@@ -1,10 +1,13 @@
+import Combine
 import SwiftUI
+import UIKit
 
 struct DiagnosticsView: View {
     @StateObject private var wiFiManager = TripperWiFiManager()
     @StateObject private var networkMonitor = LocalNetworkMonitor()
     @StateObject private var transport = DashTransport()
     @StateObject private var log = DiagnosticLog()
+    @StateObject private var deviceHealth = DeviceHealthMonitor()
 
     @AppStorage("dash.test.bikeModel") private var bikeModel = "Test motorcycle"
     @AppStorage("dash.test.firmware") private var dashFirmware = ""
@@ -13,6 +16,7 @@ struct DiagnosticsView: View {
     @AppStorage("dash.test.port") private var dashPort = 2000
 
     @State private var passphrase = ""
+    @State private var selfCheckResult: ProtocolSelfCheck.Result?
 
     private var profile: DashTestProfile {
         var profile = DashTestProfile.defaultProfile
@@ -26,18 +30,23 @@ struct DiagnosticsView: View {
     var body: some View {
         Form {
             hardwareSection
+            deviceHealthSection
             wiFiSection
             networkSection
             transportSection
+            selfCheckSection
             logSection
         }
         .navigationTitle("Dash Diagnostics")
         .onAppear {
             networkMonitor.start()
+            deviceHealth.start()
             log.append("Diagnostics screen opened", category: "app")
+            logDeviceHealth()
         }
         .onDisappear {
             transport.stop()
+            deviceHealth.stop()
         }
         .onChange(of: networkMonitor.statusText) { _, newValue in
             log.append("Path status: \(newValue); Wi-Fi=\(networkMonitor.usesWiFi)", category: "network")
@@ -45,6 +54,7 @@ struct DiagnosticsView: View {
         .onChange(of: transport.state) { _, newValue in
             log.append("Transport: \(newValue.description)", category: "udp")
         }
+        .onChange(of: deviceHealth.thermalStateText) { _, _ in logDeviceHealth() }
     }
 
     private var hardwareSection: some View {
@@ -54,6 +64,17 @@ struct DiagnosticsView: View {
                 .textInputAutocapitalization(.never)
             LabeledContent("Phone", value: profile.iPhoneModel)
             LabeledContent("iOS", value: profile.iOSVersion)
+        }
+    }
+
+    private var deviceHealthSection: some View {
+        Section("Device health") {
+            LabeledContent("Thermal", value: deviceHealth.thermalStateText)
+            LabeledContent("Battery", value: deviceHealth.batteryLevelText)
+            LabeledContent("Battery state", value: deviceHealth.batteryStateText)
+            LabeledContent("Low Power Mode", value: deviceHealth.lowPowerMode ? "On" : "Off")
+        } footer: {
+            Text("Use these values during 30/60/120-minute projection tests to correlate throttling, battery drain and stream instability.")
         }
     }
 
@@ -112,13 +133,13 @@ struct DiagnosticsView: View {
             TextField("Display host", text: $dashHost)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-            TextField("UDP control port", value: $dashPort, format: .number)
+            TextField("UDP port", value: $dashPort, format: .number)
                 .keyboardType(.numberPad)
 
             Button("Open UDP Route") {
                 do {
                     try transport.start(host: dashHost, port: UInt16(clamping: dashPort))
-                    log.append("Opening UDP control route to \(dashHost):\(dashPort)", category: "udp")
+                    log.append("Opening UDP route to \(dashHost):\(dashPort)", category: "udp")
                 } catch {
                     log.append(error.localizedDescription, category: "udp", level: .error)
                 }
@@ -134,7 +155,31 @@ struct DiagnosticsView: View {
         } header: {
             Text("UDP diagnostic route")
         } footer: {
-            Text("The default is the public-reference control port (2000). This screen is transport-only; use Settings → Connection & Projection for authentication, navigation control and H.264/RTP projection.")
+            Text("This screen is intentionally transport-only. Use Settings → Connection & Projection for authentication, navigation-mode control and H.264/RTP projection.")
+        }
+    }
+
+    private var selfCheckSection: some View {
+        Section("Local self-check") {
+            Button("Run Protocol + RTP Self-Check") {
+                let result = ProtocolSelfCheck.run()
+                selfCheckResult = result
+                log.append(
+                    "Self-check \(result.passed ? "passed" : "failed"): \(result.summary)",
+                    category: "self-check",
+                    level: result.passed ? .info : .error
+                )
+            }
+
+            if let result = selfCheckResult {
+                Label(result.passed ? "Passed" : "Failed", systemImage: result.passed ? "checkmark.circle.fill" : "xmark.octagon.fill")
+                    .foregroundStyle(result.passed ? .green : .red)
+                Text(result.summary)
+                    .font(.caption)
+                    .textSelection(.enabled)
+            }
+        } footer: {
+            Text("This performs deterministic in-app checks of K1G decoding/sequence patching, route-card generation and RTP/FU-A packet construction. It sends nothing to the motorcycle.")
         }
     }
 
@@ -166,6 +211,114 @@ struct DiagnosticsView: View {
             Text("Session log")
         } footer: {
             Text("Export redacts most of the SSID and excludes the Wi-Fi password, cryptographic session keys and route history.")
+        }
+    }
+
+    private func logDeviceHealth() {
+        log.append(
+            "Thermal=\(deviceHealth.thermalStateText), battery=\(deviceHealth.batteryLevelText), state=\(deviceHealth.batteryStateText), lowPower=\(deviceHealth.lowPowerMode)",
+            category: "health"
+        )
+    }
+}
+
+@MainActor
+final class DeviceHealthMonitor: ObservableObject {
+    @Published private(set) var thermalStateText = "Unknown"
+    @Published private(set) var batteryLevelText = "Unknown"
+    @Published private(set) var batteryStateText = "Unknown"
+    @Published private(set) var lowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
+
+    private var cancellables: Set<AnyCancellable> = []
+
+    func start() {
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        refresh()
+
+        NotificationCenter.default.publisher(for: ProcessInfo.thermalStateDidChangeNotification)
+            .merge(with: NotificationCenter.default.publisher(for: .NSProcessInfoPowerStateDidChange))
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.refresh() }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: UIDevice.batteryLevelDidChangeNotification)
+            .merge(with: NotificationCenter.default.publisher(for: UIDevice.batteryStateDidChangeNotification))
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.refresh() }
+            .store(in: &cancellables)
+    }
+
+    func stop() {
+        cancellables.removeAll()
+        UIDevice.current.isBatteryMonitoringEnabled = false
+    }
+
+    private func refresh() {
+        switch ProcessInfo.processInfo.thermalState {
+        case .nominal: thermalStateText = "Nominal"
+        case .fair: thermalStateText = "Fair"
+        case .serious: thermalStateText = "Serious"
+        case .critical: thermalStateText = "Critical"
+        @unknown default: thermalStateText = "Unknown"
+        }
+
+        let level = UIDevice.current.batteryLevel
+        batteryLevelText = level < 0 ? "Unknown" : "\(Int((level * 100).rounded()))%"
+
+        switch UIDevice.current.batteryState {
+        case .unknown: batteryStateText = "Unknown"
+        case .unplugged: batteryStateText = "Unplugged"
+        case .charging: batteryStateText = "Charging"
+        case .full: batteryStateText = "Full"
+        @unknown default: batteryStateText = "Unknown"
+        }
+
+        lowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
+    }
+}
+
+enum ProtocolSelfCheck {
+    struct Result {
+        let passed: Bool
+        let summary: String
+    }
+
+    static func run() -> Result {
+        do {
+            let auth = try HexCodec.data(from: K1GCodec.requestAuthHex)
+            guard K1GCodec.decode(auth) != nil else {
+                return .init(passed: false, summary: "K1G request-auth packet did not decode")
+            }
+
+            let patched = try K1GCodec.patchSequence(auth, sequence: 0xA5)
+            guard let marker = patched.range(of: Data("K1G ".utf8)), marker.upperBound < patched.endIndex,
+                  patched[marker.upperBound] == 0xA5 else {
+                return .init(passed: false, summary: "Rolling sequence patch did not update the K1G sequence byte")
+            }
+
+            let route = try K1GCodec.routeCard(title: "RideDash Self Check", projectionOn: true)
+            guard K1GCodec.decode(route) != nil else {
+                return .init(passed: false, summary: "Generated route card did not decode")
+            }
+
+            let packetizer = H264RTPPacketizer(fps: 4, maxPayload: 300)
+            _ = packetizer.packetize([
+                H264NALUnit(bytes: Data([0x67, 0x42, 0x00, 0x1E]), isParameterSet: true),
+                H264NALUnit(bytes: Data([0x68, 0xCE, 0x06, 0xE2]), isParameterSet: true)
+            ])
+            let oversizedIDR = Data([0x65]) + Data(repeating: 0xAB, count: 900)
+            let rtp = packetizer.packetize([H264NALUnit(bytes: oversizedIDR, isParameterSet: false)])
+            guard rtp.count > 1,
+                  rtp.allSatisfy({ $0.count >= 12 && $0[0] == 0x80 && ($0[1] & 0x7F) == 96 }) else {
+                return .init(passed: false, summary: "RTP/FU-A packetization did not produce valid RTP v2/PT96 fragments")
+            }
+
+            return .init(
+                passed: true,
+                summary: "K1G decode, sequence patch, route-card generation and RTP/FU-A fragmentation all passed"
+            )
+        } catch {
+            return .init(passed: false, summary: error.localizedDescription)
         }
     }
 }
