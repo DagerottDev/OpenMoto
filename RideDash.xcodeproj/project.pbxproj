@@ -15,6 +15,11 @@
 		000000000000000000000206 /* DashTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000106 /* DashTransport.swift */; };
 		000000000000000000000207 /* DiagnosticLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000107 /* DiagnosticLog.swift */; };
 		000000000000000000000208 /* DashTestProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000108 /* DashTestProfile.swift */; };
+		000000000000000000000209 /* DashSessionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000110 /* DashSessionCoordinator.swift */; };
+		000000000000000000000210 /* DashProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000111 /* DashProtocol.swift */; };
+		000000000000000000000211 /* ProjectionCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000112 /* ProjectionCore.swift */; };
+		000000000000000000000212 /* NavigationCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000113 /* NavigationCore.swift */; };
+		000000000000000000000213 /* ProductFeatures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000114 /* ProductFeatures.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +33,12 @@
 		000000000000000000000107 /* DiagnosticLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticLog.swift; sourceTree = "<group>"; };
 		000000000000000000000108 /* DashTestProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashTestProfile.swift; sourceTree = "<group>"; };
 		000000000000000000000109 /* RideDash.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RideDash.entitlements; sourceTree = "<group>"; };
+		000000000000000000000110 /* DashSessionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashSessionCoordinator.swift; sourceTree = "<group>"; };
+		000000000000000000000111 /* DashProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashProtocol.swift; sourceTree = "<group>"; };
+		000000000000000000000112 /* ProjectionCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectionCore.swift; sourceTree = "<group>"; };
+		000000000000000000000113 /* NavigationCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationCore.swift; sourceTree = "<group>"; };
+		000000000000000000000114 /* ProductFeatures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductFeatures.swift; sourceTree = "<group>"; };
+		000000000000000000000115 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,8 +66,12 @@
 				000000000000000000000012 /* App */,
 				000000000000000000000013 /* Features */,
 				000000000000000000000014 /* DashConnectivity */,
+				000000000000000000000020 /* DashProtocol */,
+				000000000000000000000021 /* ProjectionCore */,
+				000000000000000000000022 /* NavigationCore */,
 				000000000000000000000015 /* Diagnostics */,
 				000000000000000000000016 /* Models */,
+				000000000000000000000115 /* Info.plist */,
 				000000000000000000000109 /* RideDash.entitlements */,
 			);
 			path = RideDash;
@@ -67,6 +82,7 @@
 			children = (
 				000000000000000000000101 /* RideDashApp.swift */,
 				000000000000000000000102 /* RootView.swift */,
+				000000000000000000000110 /* DashSessionCoordinator.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -75,6 +91,7 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000018 /* Diagnostics */,
+				000000000000000000000019 /* Product */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -87,6 +104,14 @@
 			path = Diagnostics;
 			sourceTree = "<group>";
 		};
+		000000000000000000000019 /* Product */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000114 /* ProductFeatures.swift */,
+			);
+			path = Product;
+			sourceTree = "<group>";
+		};
 		000000000000000000000014 /* DashConnectivity */ = {
 			isa = PBXGroup;
 			children = (
@@ -95,6 +120,30 @@
 				000000000000000000000106 /* DashTransport.swift */,
 			);
 			path = DashConnectivity;
+			sourceTree = "<group>";
+		};
+		000000000000000000000020 /* DashProtocol */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000111 /* DashProtocol.swift */,
+			);
+			path = DashProtocol;
+			sourceTree = "<group>";
+		};
+		000000000000000000000021 /* ProjectionCore */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000112 /* ProjectionCore.swift */,
+			);
+			path = ProjectionCore;
+			sourceTree = "<group>";
+		};
+		000000000000000000000022 /* NavigationCore */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000113 /* NavigationCore.swift */,
+			);
+			path = NavigationCore;
 			sourceTree = "<group>";
 		};
 		000000000000000000000015 /* Diagnostics */ = {
@@ -197,6 +246,11 @@
 				000000000000000000000206 /* DashTransport.swift in Sources */,
 				000000000000000000000207 /* DiagnosticLog.swift in Sources */,
 				000000000000000000000208 /* DashTestProfile.swift in Sources */,
+				000000000000000000000209 /* DashSessionCoordinator.swift in Sources */,
+				000000000000000000000210 /* DashProtocol.swift in Sources */,
+				000000000000000000000211 /* ProjectionCore.swift in Sources */,
+				000000000000000000000212 /* NavigationCore.swift in Sources */,
+				000000000000000000000213 /* ProductFeatures.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -246,19 +300,17 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = RideDash;
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "RideDash uses the local network to connect to a compatible motorcycle display for navigation and diagnostics.";
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = RideDash/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.dagerott.RideDash;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -271,19 +323,17 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = RideDash;
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "RideDash uses the local network to connect to a compatible motorcycle display for navigation and diagnostics.";
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = RideDash/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.dagerott.RideDash;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
