@@ -35,8 +35,8 @@ final class DashTransport: ObservableObject {
     }
 
     @Published private(set) var state: State = .stopped
-    @Published private(set) var receivedPackets: Int = 0
-    @Published private(set) var sentPackets: Int = 0
+    @Published private(set) var receivedPackets = 0
+    @Published private(set) var sentPackets = 0
     @Published private(set) var lastError: String?
 
     var onDatagram: (@Sendable (DashDatagram) -> Void)?
@@ -46,11 +46,13 @@ final class DashTransport: ObservableObject {
     private var videoConnection: NWConnection?
     private var inputListener: NWListener?
     private var inputConnections: [ObjectIdentifier: NWConnection] = [:]
-    private var profile: DashProtocolProfile?
+    private var controlReady = false
+    private var listenerReady = false
 
     func start(profile: DashProtocolProfile) throws {
         stop()
-        guard !profile.host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        guard !profile.host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !profile.broadcastHost.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw DashTransportError.invalidHost
         }
         guard let controlPort = NWEndpoint.Port(rawValue: profile.controlPort),
@@ -59,9 +61,10 @@ final class DashTransport: ObservableObject {
             throw DashTransportError.invalidPort
         }
 
-        self.profile = profile
         state = .preparing
         lastError = nil
+        controlReady = false
+        listenerReady = false
 
         let control = NWConnection(
             host: NWEndpoint.Host(profile.broadcastHost),
@@ -69,7 +72,9 @@ final class DashTransport: ObservableObject {
             using: .udp
         )
         controlConnection = control
-        observe(connection: control, label: "control")
+        control.stateUpdateHandler = { [weak self] newState in
+            Task { @MainActor in self?.handleControlState(newState) }
+        }
         control.start(queue: queue)
 
         let video = NWConnection(
@@ -78,9 +83,11 @@ final class DashTransport: ObservableObject {
             using: .udp
         )
         videoConnection = video
-        video.stateUpdateHandler = { [weak self] state in
-            guard case .failed(let error) = state else { return }
-            Task { @MainActor in self?.lastError = "Video UDP: \(error.localizedDescription)" }
+        video.stateUpdateHandler = { [weak self] newState in
+            guard case .failed(let error) = newState else { return }
+            Task { @MainActor in
+                self?.lastError = "Video UDP: \(error.localizedDescription)"
+            }
         }
         video.start(queue: queue)
 
@@ -89,35 +96,21 @@ final class DashTransport: ObservableObject {
         let listener = try NWListener(using: parameters, on: inputPort)
         inputListener = listener
         listener.stateUpdateHandler = { [weak self] newState in
-            Task { @MainActor in
-                guard let self else { return }
-                switch newState {
-                case .ready:
-                    if self.controlConnection?.state == .ready { self.state = .ready }
-                case .waiting(let error):
-                    self.state = .waiting("Input listener: \(error.localizedDescription)")
-                case .failed(let error):
-                    self.state = .failed("Input listener: \(error.localizedDescription)")
-                    self.lastError = error.localizedDescription
-                default:
-                    break
-                }
-            }
+            Task { @MainActor in self?.handleListenerState(newState) }
         }
         listener.newConnectionHandler = { [weak self] connection in
-            guard let self else { return }
-            self.acceptInput(connection)
+            self?.acceptInput(connection)
         }
         listener.start(queue: queue)
     }
 
-    /// Backward-compatible diagnostic route used by DiagnosticsView.
+    /// Lightweight diagnostic mode retained for the Diagnostics screen.
     func start(host: String, port: UInt16) throws {
         var profile = DashProtocolProfile.publicReference
         profile.host = host
         profile.broadcastHost = host
-        profile.videoPort = port
         profile.controlPort = port
+        profile.videoPort = port
         try start(profile: profile)
     }
 
@@ -130,7 +123,8 @@ final class DashTransport: ObservableObject {
         videoConnection = nil
         inputListener = nil
         inputConnections.removeAll()
-        profile = nil
+        controlReady = false
+        listenerReady = false
         state = .stopped
     }
 
@@ -152,12 +146,13 @@ final class DashTransport: ObservableObject {
                     return
                 }
                 Task { @MainActor in
-                    self?.sentPackets += 1
-                    self?.emit(.init(
+                    guard let self else { return }
+                    self.sentPackets += 1
+                    self.emit(.init(
                         timestamp: .now,
                         direction: .outbound,
                         channel: channel,
-                        endpoint: self?.endpointDescription(connection.endpoint) ?? "unknown",
+                        endpoint: self.endpointDescription(connection.endpoint),
                         data: data
                     ))
                 }
@@ -166,27 +161,51 @@ final class DashTransport: ObservableObject {
         }
     }
 
-    private func observe(connection: NWConnection, label: String) {
-        connection.stateUpdateHandler = { [weak self, weak connection] newState in
-            Task { @MainActor in
-                guard let self else { return }
-                switch newState {
-                case .setup, .preparing:
-                    self.state = .preparing
-                case .ready:
-                    if self.inputListener?.state == .ready { self.state = .ready }
-                case .waiting(let error):
-                    self.state = .waiting("\(label): \(error.localizedDescription)")
-                case .failed(let error):
-                    self.state = .failed("\(label): \(error.localizedDescription)")
-                    self.lastError = error.localizedDescription
-                case .cancelled:
-                    if connection === self.controlConnection { self.state = .stopped }
-                @unknown default:
-                    self.state = .waiting("Unknown Network.framework state")
-                }
-            }
+    private func handleControlState(_ newState: NWConnection.State) {
+        switch newState {
+        case .setup, .preparing:
+            controlReady = false
+            state = .preparing
+        case .ready:
+            controlReady = true
+            updateReadyState()
+        case .waiting(let error):
+            controlReady = false
+            state = .waiting("Control: \(error.localizedDescription)")
+        case .failed(let error):
+            controlReady = false
+            lastError = error.localizedDescription
+            state = .failed("Control: \(error.localizedDescription)")
+        case .cancelled:
+            controlReady = false
+            if inputListener == nil { state = .stopped }
+        @unknown default:
+            state = .waiting("Unknown control transport state")
         }
+    }
+
+    private func handleListenerState(_ newState: NWListener.State) {
+        switch newState {
+        case .setup, .waiting:
+            if case .waiting(let error) = newState {
+                state = .waiting("Input listener: \(error.localizedDescription)")
+            }
+        case .ready:
+            listenerReady = true
+            updateReadyState()
+        case .failed(let error):
+            listenerReady = false
+            lastError = error.localizedDescription
+            state = .failed("Input listener: \(error.localizedDescription)")
+        case .cancelled:
+            listenerReady = false
+        @unknown default:
+            break
+        }
+    }
+
+    private func updateReadyState() {
+        if controlReady && listenerReady { state = .ready }
     }
 
     private func acceptInput(_ connection: NWConnection) {
@@ -194,9 +213,14 @@ final class DashTransport: ObservableObject {
         inputConnections[id] = connection
         connection.stateUpdateHandler = { [weak self, weak connection] state in
             guard let self, let connection else { return }
-            if case .ready = state { self.receiveNext(on: connection) }
-            if case .failed = state { self.inputConnections.removeValue(forKey: id) }
-            if case .cancelled = state { self.inputConnections.removeValue(forKey: id) }
+            switch state {
+            case .ready:
+                self.receiveNext(on: connection)
+            case .failed, .cancelled:
+                self.inputConnections.removeValue(forKey: id)
+            default:
+                break
+            }
         }
         connection.start(queue: queue)
     }
@@ -239,8 +263,8 @@ enum DashTransportError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidHost: return "Dash host is empty."
-        case .invalidPort: return "Dash UDP port is invalid."
+        case .invalidHost: return "Dash host/broadcast host is empty."
+        case .invalidPort: return "A configured UDP port is invalid."
         case .notStarted: return "Dash UDP transport has not been started."
         }
     }
