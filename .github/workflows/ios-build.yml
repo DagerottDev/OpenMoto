@@ -21,11 +21,10 @@ jobs:
 
       - name: Build RideDash for iOS Simulator
         run: |
-          set -o pipefail
           xcodebuild \
             -project RideDash.xcodeproj \
             -target RideDash \
             -configuration Debug \
             -sdk iphonesimulator \
             CODE_SIGNING_ALLOWED=NO \
-            build | xcpretty
+            build
