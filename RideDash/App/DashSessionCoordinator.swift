@@ -57,6 +57,8 @@ final class DashSessionCoordinator: ObservableObject {
     private var authTimeoutTask: Task<Void, Never>?
     private var projectionHeartbeatTask: Task<Void, Never>?
     private var routeHeartbeatTask: Task<Void, Never>?
+    private var navInfoHeartbeatTask: Task<Void, Never>?
+    private var statusHeartbeatTask: Task<Void, Never>?
 
     init(transport: DashTransport = DashTransport(), log: DiagnosticLog = DiagnosticLog()) {
         self.transport = transport
@@ -115,8 +117,7 @@ final class DashSessionCoordinator: ObservableObject {
             routeTitle = title
         }
 
-        routeHeartbeatTask?.cancel()
-        projectionHeartbeatTask?.cancel()
+        cancelNavigationKeepAlives()
         state = .enteringNavigation
 
         try await sendHex(K1GCodec.navContextHex)
@@ -135,7 +136,9 @@ final class DashSessionCoordinator: ObservableObject {
         navEntered = true
         state = .navigationReady
         startRouteHeartbeat()
-        log.append("Navigation control plane entered", category: "session")
+        startNavInfoHeartbeat()
+        startStatusHeartbeat()
+        log.append("Navigation control plane entered; route/nav/status keep-alives running", category: "session")
     }
 
     func beginProjectionHeartbeat() {
@@ -159,9 +162,8 @@ final class DashSessionCoordinator: ObservableObject {
 
     func stopProjection() async {
         projectionHeartbeatTask?.cancel()
-        routeHeartbeatTask?.cancel()
+        cancelNavigationKeepAlives()
         projectionHeartbeatTask = nil
-        routeHeartbeatTask = nil
 
         guard navEntered else { return }
         state = .stopping
@@ -181,10 +183,9 @@ final class DashSessionCoordinator: ObservableObject {
     func disconnect() {
         authTimeoutTask?.cancel()
         projectionHeartbeatTask?.cancel()
-        routeHeartbeatTask?.cancel()
+        cancelNavigationKeepAlives()
         authTimeoutTask = nil
         projectionHeartbeatTask = nil
-        routeHeartbeatTask = nil
 
         transport.stop()
         sequence = 0
@@ -320,6 +321,8 @@ final class DashSessionCoordinator: ObservableObject {
         try await transport.sendControl(patched)
     }
 
+    // MARK: - Navigation keep-alives
+
     private func startRouteHeartbeat() {
         routeHeartbeatTask?.cancel()
         routeHeartbeatTask = Task { [weak self] in
@@ -336,6 +339,80 @@ final class DashSessionCoordinator: ObservableObject {
             }
         }
     }
+
+    /// Public interoperability captures show the stock app refreshing an active-navigation
+    /// TLV bundle at ~1 Hz. The custom H.264 renderer contains the real MapKit instruction;
+    /// this native-dash packet intentionally uses a conservative generic continue/500 m value
+    /// until the target firmware's complete maneuver enum is validated on owned hardware.
+    private func startNavInfoHeartbeat() {
+        navInfoHeartbeatTask?.cancel()
+        navInfoHeartbeatTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                do {
+                    try await self.sendRaw(try self.buildActiveNavInfoPacket())
+                } catch {
+                    self.log.append(error.localizedDescription, category: "nav-info", level: .error)
+                }
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
+    }
+
+    /// Mirrors the public reference's foreground-service cadence: one 0x0049-shaped
+    /// status heartbeat plus a 0x0030 metadata packet each second. Values are benign
+    /// phone/display metadata placeholders and never touch motorcycle control systems.
+    private func startStatusHeartbeat() {
+        statusHeartbeatTask?.cancel()
+        statusHeartbeatTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                do {
+                    try await self.sendHex(Self.statusHeartbeat0049Hex)
+                    try await self.sendHex(Self.metadataHeartbeat0030Hex)
+                } catch {
+                    self.log.append(error.localizedDescription, category: "status-tick", level: .error)
+                }
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
+    }
+
+    private func cancelNavigationKeepAlives() {
+        routeHeartbeatTask?.cancel()
+        navInfoHeartbeatTask?.cancel()
+        statusHeartbeatTask?.cancel()
+        routeHeartbeatTask = nil
+        navInfoHeartbeatTask = nil
+        statusHeartbeatTask = nil
+    }
+
+    private func buildActiveNavInfoPacket() throws -> Data {
+        let maneuver = "050200010B"                 // public reference: generic continue
+        let primaryDistance = "0504000201F4"         // 500 m
+        let primaryUnit = "0506000130"               // unit code decimal 30 => byte 0x30 (metres)
+        let totalDistance = "0509000201F4"            // 500 m
+        let totalUnit = "0546000130"                 // metres
+        let decimalSeparator = "050A000155"           // dot / normal integer formatting
+        let projectionOn = "0605000155"
+        let decimalFormattingOff = "060D0001AA"
+
+        let payload = maneuver + primaryDistance + primaryUnit + totalDistance + totalUnit +
+            decimalSeparator + projectionOn + decimalFormattingOff
+        let segmentCount = 9                           // 8 nav TLVs + K1G container segment
+        let k1gHeader = "00000000020100054B31472000"
+        let inner = String(format: "%04X", segmentCount) + k1gHeader + payload
+        let innerBytes = inner.count / 2
+        let full = String(format: "%04X", innerBytes + 2) + inner
+        return try HexCodec.data(from: full)
+    }
+
+    private static let statusHeartbeat0049Hex =
+        "0049000B00000000020100054B3147200006080001050610000139060300015506040001A2060F0001AA" +
+        "0601000101054C000113052D00020000051B0001190521000132054D000132"
+
+    private static let metadataHeartbeat0030Hex =
+        "0030000600000000020100054B3147200006080001FF054C000117052D00020000051B0001160521000132054D000132"
 
     private func startAuthTimeout(_ timeout: Duration) {
         authTimeoutTask?.cancel()
