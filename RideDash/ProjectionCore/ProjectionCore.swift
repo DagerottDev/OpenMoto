@@ -54,66 +54,66 @@ final class DashFrameRenderer {
             throw ProjectionError.pixelBufferMissingBaseAddress
         }
 
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
         guard let context = CGContext(
             data: baseAddress,
             width: width,
             height: height,
             bitsPerComponent: 8,
             bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer),
-            space: colorSpace,
+            space: CGColorSpaceCreateDeviceRGB(),
             bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
         ) else {
             throw ProjectionError.contextCreationFailed
         }
 
-        // CoreGraphics coordinates are flipped relative to UIKit text APIs.
         context.setFillColor(UIColor.black.cgColor)
-        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        context.fill(CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height)))
         UIGraphicsPushContext(context)
         defer { UIGraphicsPopContext() }
 
         if state.isCalibrationGrid {
             drawCalibration(in: context)
         } else {
-            drawNavigation(state, in: context)
+            drawNavigation(state)
         }
         return pixelBuffer
     }
 
     private func drawCalibration(in context: CGContext) {
-        let rect = CGRect(x: 0, y: 0, width: width, height: height)
+        let w = CGFloat(width)
+        let h = CGFloat(height)
+        let rect = CGRect(x: 0, y: 0, width: w, height: h)
         context.setStrokeColor(UIColor.white.withAlphaComponent(0.35).cgColor)
         context.setLineWidth(1)
         stride(from: 0, through: width, by: 25).forEach { x in
-            context.move(to: CGPoint(x: x, y: 0))
-            context.addLine(to: CGPoint(x: x, y: height))
+            context.move(to: CGPoint(x: CGFloat(x), y: 0))
+            context.addLine(to: CGPoint(x: CGFloat(x), y: h))
         }
         stride(from: 0, through: height, by: 25).forEach { y in
-            context.move(to: CGPoint(x: 0, y: y))
-            context.addLine(to: CGPoint(x: width, y: y))
+            context.move(to: CGPoint(x: 0, y: CGFloat(y)))
+            context.addLine(to: CGPoint(x: w, y: CGFloat(y)))
         }
         context.strokePath()
 
         context.setStrokeColor(UIColor.systemOrange.cgColor)
         context.setLineWidth(3)
         context.strokeEllipse(in: rect.insetBy(dx: 7, dy: 7))
-        context.move(to: CGPoint(x: width / 2, y: 0))
-        context.addLine(to: CGPoint(x: width / 2, y: height))
-        context.move(to: CGPoint(x: 0, y: height / 2))
-        context.addLine(to: CGPoint(x: width, y: height / 2))
+        context.move(to: CGPoint(x: w / 2, y: 0))
+        context.addLine(to: CGPoint(x: w / 2, y: h))
+        context.move(to: CGPoint(x: 0, y: h / 2))
+        context.addLine(to: CGPoint(x: w, y: h / 2))
         context.strokePath()
 
         drawText("526 × 300 CALIBRATION", frame: CGRect(x: 80, y: 125, width: 366, height: 40), size: 24, weight: .bold, alignment: .center)
     }
 
-    private func drawNavigation(_ state: ProjectionUIState, in context: CGContext) {
-        let safe = CGRect(x: 34, y: 22, width: width - 68, height: height - 44)
+    private func drawNavigation(_ state: ProjectionUIState) {
+        let w = CGFloat(width)
+        let h = CGFloat(height)
+        let safe = CGRect(x: 34, y: 22, width: w - 68, height: h - 44)
 
-        // Destination header.
         drawText(state.destination, frame: CGRect(x: safe.minX + 12, y: safe.minY + 2, width: safe.width - 24, height: 30), size: 18, weight: .semibold, alignment: .center, color: .systemGray3)
 
-        // Maneuver card.
         let card = CGRect(x: safe.minX + 34, y: safe.minY + 40, width: safe.width - 68, height: 104)
         let path = UIBezierPath(roundedRect: card, cornerRadius: 24)
         UIColor(white: 0.10, alpha: 1).setFill()
@@ -121,13 +121,12 @@ final class DashFrameRenderer {
         drawText(state.maneuver, frame: CGRect(x: card.minX + 16, y: card.minY + 13, width: card.width - 32, height: 42), size: 32, weight: .bold, alignment: .center)
         drawText(state.distanceToManeuver, frame: CGRect(x: card.minX + 16, y: card.minY + 58, width: card.width - 32, height: 32), size: 24, weight: .semibold, alignment: .center, color: .systemOrange)
 
-        // Bottom glance row.
         drawMetric(title: "ETA", value: state.eta, x: safe.minX + 22, y: safe.maxY - 70, width: 105)
         drawMetric(title: "LEFT", value: state.remainingDistance, x: safe.midX - 52, y: safe.maxY - 70, width: 105)
         drawMetric(title: "SPEED", value: "\(Int(state.speedKph.rounded()))", x: safe.maxX - 127, y: safe.maxY - 70, width: 105)
 
         if let status = state.statusMessage {
-            drawText(status, frame: CGRect(x: 90, y: height - 25, width: width - 180, height: 18), size: 11, weight: .medium, alignment: .center, color: .systemYellow)
+            drawText(status, frame: CGRect(x: 90, y: h - 25, width: w - 180, height: 18), size: 11, weight: .medium, alignment: .center, color: .systemYellow)
         }
     }
 
@@ -166,7 +165,7 @@ struct H264NALUnit: Sendable, Hashable {
 }
 
 final class H264Encoder {
-    var onNALUnits: (@Sendable ([H264NALUnit], CMTime) -> Void)?
+    var onNALUnits: (([H264NALUnit], CMTime) -> Void)?
 
     private let width: Int32
     private let height: Int32
@@ -206,7 +205,6 @@ final class H264Encoder {
 
     private func configure() throws {
         var created: VTCompressionSession?
-        let refcon = Unmanaged.passUnretained(self).toOpaque()
         let status = VTCompressionSessionCreate(
             allocator: kCFAllocatorDefault,
             width: width,
@@ -216,7 +214,7 @@ final class H264Encoder {
             imageBufferAttributes: nil,
             compressedDataAllocator: nil,
             outputCallback: Self.outputCallback,
-            refcon: refcon,
+            refcon: Unmanaged.passUnretained(self).toOpaque(),
             compressionSessionOut: &created
         )
         guard status == noErr, let created else { throw ProjectionError.videoToolbox(status) }
@@ -225,13 +223,13 @@ final class H264Encoder {
         try set(kVTCompressionPropertyKey_RealTime, value: kCFBooleanTrue)
         try set(kVTCompressionPropertyKey_ProfileLevel, value: kVTProfileLevel_H264_Baseline_AutoLevel)
         try set(kVTCompressionPropertyKey_AllowFrameReordering, value: kCFBooleanFalse)
-        try set(kVTCompressionPropertyKey_AverageBitRate, value: bitrate as CFNumber)
-        try set(kVTCompressionPropertyKey_ExpectedFrameRate, value: fps as CFNumber)
-        try set(kVTCompressionPropertyKey_MaxKeyFrameInterval, value: (fps * 2) as CFNumber)
-        let dataRate: [Int] = [bitrate / 8, 1]
-        try set(kVTCompressionPropertyKey_DataRateLimits, value: dataRate as CFArray)
-        let prepare = VTCompressionSessionPrepareToEncodeFrames(created)
-        guard prepare == noErr else { throw ProjectionError.videoToolbox(prepare) }
+        try set(kVTCompressionPropertyKey_AverageBitRate, value: NSNumber(value: bitrate))
+        try set(kVTCompressionPropertyKey_ExpectedFrameRate, value: NSNumber(value: fps))
+        try set(kVTCompressionPropertyKey_MaxKeyFrameInterval, value: NSNumber(value: fps * 2))
+        let dataRateLimits = [NSNumber(value: bitrate / 8), NSNumber(value: 1)] as CFArray
+        try set(kVTCompressionPropertyKey_DataRateLimits, value: dataRateLimits)
+        let prepareStatus = VTCompressionSessionPrepareToEncodeFrames(created)
+        guard prepareStatus == noErr else { throw ProjectionError.videoToolbox(prepareStatus) }
     }
 
     private func set(_ key: CFString, value: CFTypeRef) throws {
@@ -245,20 +243,15 @@ final class H264Encoder {
               let refcon,
               let sampleBuffer,
               CMSampleBufferDataIsReady(sampleBuffer) else { return }
-        let encoder = Unmanaged<H264Encoder>.fromOpaque(refcon).takeUnretainedValue()
-        encoder.consume(sampleBuffer)
+        Unmanaged<H264Encoder>.fromOpaque(refcon).takeUnretainedValue().consume(sampleBuffer)
     }
 
     private func consume(_ sampleBuffer: CMSampleBuffer) {
         var units: [H264NALUnit] = []
-        let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, createIfNecessary: false)
-        let isKeyframe: Bool = {
-            guard let attachments,
-                  CFArrayGetCount(attachments) > 0,
-                  let raw = CFArrayGetValueAtIndex(attachments, 0) else { return false }
-            let dictionary = unsafeBitCast(raw, to: CFDictionary.self) as NSDictionary
-            return dictionary[kCMSampleAttachmentKey_NotSync] == nil
-        }()
+
+        let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, createIfNecessary: false) as? [[CFString: Any]]
+        let notSync = attachments?.first?[kCMSampleAttachmentKey_NotSync] as? Bool ?? false
+        let isKeyframe = !notSync
 
         if isKeyframe, let format = CMSampleBufferGetFormatDescription(sampleBuffer) {
             for index in 0..<2 {
@@ -302,7 +295,7 @@ final class H264Encoder {
                 Int(bytes[offset + 3])
             offset += 4
             guard nalLength > 0, offset + nalLength <= totalLength else { break }
-            units.append(.init(bytes: Data(bytes: bytes + offset, count: nalLength), isParameterSet: false))
+            units.append(.init(bytes: Data(bytes: bytes.advanced(by: offset), count: nalLength), isParameterSet: false))
             offset += nalLength
         }
 
@@ -333,26 +326,26 @@ final class H264RTPPacketizer {
             let isLastUnit = unitIndex == units.count - 1
             let bytes = unit.bytes
             guard let first = bytes.first else { continue }
+
             if bytes.count <= maxPayload {
                 packets.append(makePacket(payload: bytes, marker: isLastUnit))
-            } else {
-                let nri = first & 0x60
-                let forbidden = first & 0x80
-                let nalType = first & 0x1F
-                let fuIndicator = forbidden | nri | 28
-                let body = bytes.dropFirst()
-                let fragmentSize = maxPayload - 2
-                var offset = 0
-                while offset < body.count {
-                    let end = min(body.count, offset + fragmentSize)
-                    let startBit: UInt8 = offset == 0 ? 0x80 : 0
-                    let endBit: UInt8 = end == body.count ? 0x40 : 0
-                    let fuHeader = startBit | endBit | nalType
-                    var payload = Data([fuIndicator, fuHeader])
-                    payload.append(body[offset..<end])
-                    packets.append(makePacket(payload: payload, marker: isLastUnit && end == body.count))
-                    offset = end
-                }
+                continue
+            }
+
+            let fuIndicator = (first & 0x80) | (first & 0x60) | 28
+            let nalType = first & 0x1F
+            let body = Data(bytes.dropFirst())
+            let fragmentSize = maxPayload - 2
+            var offset = 0
+            while offset < body.count {
+                let end = min(body.count, offset + fragmentSize)
+                let startBit: UInt8 = offset == 0 ? 0x80 : 0
+                let endBit: UInt8 = end == body.count ? 0x40 : 0
+                let fuHeader = startBit | endBit | nalType
+                var payload = Data([fuIndicator, fuHeader])
+                payload.append(body.subdata(in: offset..<end))
+                packets.append(makePacket(payload: payload, marker: isLastUnit && end == body.count))
+                offset = end
             }
         }
         timestamp &+= timestampStep
@@ -361,7 +354,7 @@ final class H264RTPPacketizer {
 
     private func makePacket(payload: Data, marker: Bool) -> Data {
         var packet = Data(capacity: 12 + payload.count)
-        packet.append(0x80) // RTP v2
+        packet.append(0x80)
         packet.append((marker ? 0x80 : 0) | payloadType)
         appendBE(sequence, to: &packet)
         appendBE(timestamp, to: &packet)
@@ -372,8 +365,8 @@ final class H264RTPPacketizer {
     }
 
     private func appendBE<T: FixedWidthInteger>(_ value: T, to data: inout Data) {
-        var be = value.bigEndian
-        withUnsafeBytes(of: &be) { data.append(contentsOf: $0) }
+        var bigEndian = value.bigEndian
+        withUnsafeBytes(of: &bigEndian) { data.append(contentsOf: $0) }
     }
 }
 
@@ -391,11 +384,7 @@ final class ProjectionStreamer: ObservableObject {
     private var renderTask: Task<Void, Never>?
     private var encoder: H264Encoder?
     private var packetizer: H264RTPPacketizer?
-    private let renderer: DashFrameRenderer
-
-    init(renderer: DashFrameRenderer = DashFrameRenderer()) {
-        self.renderer = renderer
-    }
+    private var renderer = DashFrameRenderer()
 
     func start(
         coordinator: DashSessionCoordinator,
@@ -404,6 +393,7 @@ final class ProjectionStreamer: ObservableObject {
     ) throws {
         stop()
         state = .starting
+        renderer = DashFrameRenderer(width: profile.renderWidth, height: profile.renderHeight)
         let encoder = try H264Encoder(
             width: profile.renderWidth,
             height: profile.renderHeight,
@@ -436,14 +426,14 @@ final class ProjectionStreamer: ObservableObject {
         coordinator.beginProjectionHeartbeat()
         state = .streaming
         let frameDuration = 1.0 / Double(max(1, profile.fps))
-        renderTask = Task { [weak self] in
+        renderTask = Task { [weak self, weak coordinator] in
+            guard let coordinator else { return }
             var frame: Int64 = 0
             while !Task.isCancelled {
                 guard let self else { return }
                 do {
                     let buffer = try self.renderer.render(stateProvider())
-                    let pts = CMTime(value: frame, timescale: CMTimeScale(max(1, profile.fps)))
-                    try encoder.encode(buffer, pts: pts)
+                    try encoder.encode(buffer, pts: CMTime(value: frame, timescale: CMTimeScale(max(1, profile.fps))))
                     self.renderedFrames += 1
                     frame += 1
                 } catch {
