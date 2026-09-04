@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import NetworkExtension
 
@@ -47,7 +48,7 @@ final class TripperWiFiManager: ObservableObject, DashWiFiJoining {
         configuration.joinOnce = true
 
         do {
-            try await withCheckedThrowingContinuation { continuation in
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                 NEHotspotConfigurationManager.shared.apply(configuration) { error in
                     if let error {
                         continuation.resume(throwing: error)
