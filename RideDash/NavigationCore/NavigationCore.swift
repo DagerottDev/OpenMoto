@@ -142,11 +142,18 @@ final class NavigationViewModel: ObservableObject {
     @Published private(set) var route: MKRoute?
     @Published private(set) var activeStepIndex = 0
     @Published private(set) var isCalculating = false
+    @Published private(set) var isRecalculating = false
+    @Published private(set) var recalculationCount = 0
+    @Published private(set) var distanceFromRouteMeters: CLLocationDistance = 0
     @Published private(set) var errorMessage: String?
     @Published private(set) var projectionState = ProjectionUIState()
 
     let locationService: NavigationLocationService
     private var cancellables: Set<AnyCancellable> = []
+    private var lastRecalculationAt = Date.distantPast
+
+    private let deviationThresholdMeters: CLLocationDistance = 75
+    private let recalculationCooldown: TimeInterval = 20
 
     init(locationService: NavigationLocationService = NavigationLocationService()) {
         self.locationService = locationService
@@ -170,17 +177,8 @@ final class NavigationViewModel: ObservableObject {
                 throw NavigationError.locationUnavailable
             }
 
-            let request = MKDirections.Request()
-            request.source = MKMapItem(placemark: MKPlacemark(coordinate: originLocation.coordinate))
-            request.destination = MKMapItem(placemark: MKPlacemark(coordinate: resolved.coordinate))
-            request.transportType = .automobile
-            request.requestsAlternateRoutes = false
-
-            let response = try await MKDirections(request: request).calculate()
-            guard let route = response.routes.first else { throw NavigationError.routeNotFound }
-            self.route = route
-            activeStepIndex = firstUsableStep(in: route)
-            rebuildProjectionState(location: originLocation)
+            let newRoute = try await directions(from: originLocation, to: resolved)
+            apply(route: newRoute, from: originLocation)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -190,6 +188,9 @@ final class NavigationViewModel: ObservableObject {
         route = nil
         destination = nil
         activeStepIndex = 0
+        recalculationCount = 0
+        distanceFromRouteMeters = 0
+        errorMessage = nil
         projectionState = ProjectionUIState()
     }
 
@@ -231,19 +232,68 @@ final class NavigationViewModel: ObservableObject {
 
     private func handleLocation(_ location: CLLocation?) {
         guard let location else { return }
+
         if let route, !route.steps.isEmpty {
             let suggested = nearestUpcomingStep(in: route, to: location)
             if suggested >= activeStepIndex { activeStepIndex = suggested }
+
+            distanceFromRouteMeters = distanceFromRoute(location, route: route)
+            if distanceFromRouteMeters > deviationThresholdMeters {
+                Task { [weak self] in
+                    await self?.recalculateIfNeeded(from: location)
+                }
+            }
         }
+
         rebuildProjectionState(location: location)
     }
 
-    private func rebuildProjectionState(location: CLLocation?) {
+    private func recalculateIfNeeded(from location: CLLocation) async {
+        guard !isRecalculating,
+              let destination,
+              Date().timeIntervalSince(lastRecalculationAt) >= recalculationCooldown else { return }
+
+        isRecalculating = true
+        lastRecalculationAt = .now
+        errorMessage = nil
+        defer { isRecalculating = false }
+
+        do {
+            let newRoute = try await directions(from: location, to: destination)
+            recalculationCount += 1
+            apply(route: newRoute, from: location)
+        } catch {
+            errorMessage = "Route recalculation failed: \(error.localizedDescription)"
+            rebuildProjectionState(location: location, forcedStatus: "Off route · reconnecting route")
+        }
+    }
+
+    private func directions(from origin: CLLocation, to destination: ResolvedDestination) async throws -> MKRoute {
+        let request = MKDirections.Request()
+        request.source = MKMapItem(placemark: MKPlacemark(coordinate: origin.coordinate))
+        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destination.coordinate))
+        request.transportType = .automobile
+        request.requestsAlternateRoutes = false
+
+        let response = try await MKDirections(request: request).calculate()
+        guard let route = response.routes.first else { throw NavigationError.routeNotFound }
+        return route
+    }
+
+    private func apply(route: MKRoute, from origin: CLLocation) {
+        self.route = route
+        activeStepIndex = firstUsableStep(in: route)
+        distanceFromRouteMeters = 0
+        rebuildProjectionState(location: origin)
+    }
+
+    private func rebuildProjectionState(location: CLLocation?, forcedStatus: String? = nil) {
         guard let route, let destination else {
             projectionState = ProjectionUIState(
                 destination: destination?.name ?? "RideDash",
                 speedKph: max(0, (location?.speed ?? 0) * 3.6),
-                gpsAccuracy: location?.horizontalAccuracy
+                gpsAccuracy: location?.horizontalAccuracy,
+                statusMessage: forcedStatus
             )
             return
         }
@@ -252,21 +302,30 @@ final class NavigationViewModel: ObservableObject {
             ? nil
             : route.steps[min(max(0, activeStepIndex), route.steps.count - 1)]
         let instruction = (step?.instructions.isEmpty == false) ? (step?.instructions ?? "Continue") : "Continue"
-        let distance = step.map { Self.formatDistance($0.distance) } ?? "--"
-        let etaDate = Date().addingTimeInterval(route.expectedTravelTime)
+        let distanceToStep = distanceToEnd(of: step, from: location) ?? step?.distance ?? 0
+
+        let remainingDistance = remainingRouteDistance(route, from: location)
+        let ratio = route.distance > 0 ? min(1, max(0, remainingDistance / route.distance)) : 1
+        let remainingTravelTime = route.expectedTravelTime * ratio
+        let etaDate = Date().addingTimeInterval(remainingTravelTime)
         let etaFormatter = DateFormatter()
         etaFormatter.dateFormat = "HH:mm"
+
+        var status = forcedStatus
+        if status == nil, isRecalculating { status = "Recalculating route…" }
+        if status == nil, (location?.horizontalAccuracy ?? 0) > 50 { status = "GPS accuracy degraded" }
+        if status == nil, distanceFromRouteMeters > deviationThresholdMeters { status = "Off route" }
 
         projectionState = ProjectionUIState(
             destination: destination.name,
             maneuver: instruction,
-            distanceToManeuver: distance,
+            distanceToManeuver: Self.formatDistance(distanceToStep),
             eta: etaFormatter.string(from: etaDate),
-            remainingDistance: Self.formatDistance(route.distance),
+            remainingDistance: Self.formatDistance(remainingDistance),
             speedKph: max(0, (location?.speed ?? 0) * 3.6),
             gpsAccuracy: location?.horizontalAccuracy,
             isCalibrationGrid: false,
-            statusMessage: (location?.horizontalAccuracy ?? 0) > 50 ? "GPS accuracy degraded" : nil
+            statusMessage: status
         )
     }
 
@@ -295,6 +354,49 @@ final class NavigationViewModel: ObservableObject {
             if distance < 30, index + 1 < route.steps.count { return index + 1 }
         }
         return bestIndex
+    }
+
+    private func remainingRouteDistance(_ route: MKRoute, from location: CLLocation?) -> CLLocationDistance {
+        guard !route.steps.isEmpty else { return route.distance }
+        let index = min(max(0, activeStepIndex), route.steps.count - 1)
+        let currentStepRemaining = distanceToEnd(of: route.steps[index], from: location) ?? route.steps[index].distance
+        let future = route.steps.dropFirst(index + 1).reduce(0.0) { $0 + $1.distance }
+        return max(0, currentStepRemaining + future)
+    }
+
+    private func distanceToEnd(of step: MKRoute.Step?, from location: CLLocation?) -> CLLocationDistance? {
+        guard let step, let location, step.polyline.pointCount > 0 else { return nil }
+        let points = step.polyline.points()
+        let coordinate = points[step.polyline.pointCount - 1].coordinate
+        return location.distance(from: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude))
+    }
+
+    private func distanceFromRoute(_ location: CLLocation, route: MKRoute) -> CLLocationDistance {
+        let polyline = route.polyline
+        guard polyline.pointCount > 1 else { return .greatestFiniteMagnitude }
+
+        let target = MKMapPoint(location.coordinate)
+        let points = polyline.points()
+        var best = CLLocationDistance.greatestFiniteMagnitude
+
+        for index in 0..<(polyline.pointCount - 1) {
+            let a = points[index]
+            let b = points[index + 1]
+            let dx = b.x - a.x
+            let dy = b.y - a.y
+            let lengthSquared = dx * dx + dy * dy
+
+            let t: Double
+            if lengthSquared <= .ulpOfOne {
+                t = 0
+            } else {
+                t = min(1, max(0, ((target.x - a.x) * dx + (target.y - a.y) * dy) / lengthSquared))
+            }
+
+            let projected = MKMapPoint(x: a.x + t * dx, y: a.y + t * dy)
+            best = min(best, target.distance(to: projected))
+        }
+        return best
     }
 
     private static func formatDistance(_ meters: CLLocationDistance) -> String {
