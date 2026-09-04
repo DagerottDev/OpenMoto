@@ -11,7 +11,7 @@ struct DashTestProfile: Codable, Equatable {
 
     static var defaultProfile: DashTestProfile {
         DashTestProfile(
-            bikeModel: "Guerrilla 450",
+            bikeModel: "Test motorcycle",
             dashFirmware: "",
             dashSSID: "",
             dashHost: "192.168.1.1",
