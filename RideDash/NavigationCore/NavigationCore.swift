@@ -39,8 +39,6 @@ final class NavigationLocationService: NSObject, ObservableObject, CLLocationMan
     }
 
     func setBackgroundNavigationEnabled(_ enabled: Bool) {
-        // This is only useful when the app target has the legitimate location background mode.
-        // It does not guarantee indefinite video/network execution while the phone is locked.
         manager.allowsBackgroundLocationUpdates = enabled
         manager.showsBackgroundLocationIndicator = enabled
     }
@@ -69,7 +67,9 @@ struct ResolvedDestination: Identifiable, Hashable {
     let coordinate: CLLocationCoordinate2D
 
     static func == (lhs: ResolvedDestination, rhs: ResolvedDestination) -> Bool {
-        lhs.name == rhs.name && lhs.coordinate.latitude == rhs.coordinate.latitude && lhs.coordinate.longitude == rhs.coordinate.longitude
+        lhs.name == rhs.name &&
+        lhs.coordinate.latitude == rhs.coordinate.latitude &&
+        lhs.coordinate.longitude == rhs.coordinate.longitude
     }
 
     func hash(into hasher: inout Hasher) {
@@ -93,8 +93,9 @@ enum RouteResolver {
                 return .init(name: url.host ?? "Shared destination", coordinate: coordinate)
             }
             let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-            let keys = ["q", "query", "destination", "daddr", "ll"]
-            if let value = components?.queryItems?.first(where: { keys.contains($0.name.lowercased()) })?.value {
+            let keys = Set(["q", "query", "destination", "daddr", "ll"])
+            if let value = components?.queryItems?.first(where: { keys.contains($0.name.lowercased()) })?.value,
+               !value.isEmpty {
                 if let coordinate = coordinate(from: value) {
                     return .init(name: value, coordinate: coordinate)
                 }
@@ -117,10 +118,7 @@ enum RouteResolver {
         }
         let response = try await MKLocalSearch(request: request).start()
         guard let item = response.mapItems.first else { throw NavigationError.destinationNotFound }
-        return .init(
-            name: item.name ?? query,
-            coordinate: item.placemark.coordinate
-        )
+        return .init(name: item.name ?? query, coordinate: item.placemark.coordinate)
     }
 
     private static func coordinate(from text: String) -> CLLocationCoordinate2D? {
@@ -164,6 +162,7 @@ final class NavigationViewModel: ObservableObject {
         isCalculating = true
         errorMessage = nil
         defer { isCalculating = false }
+
         do {
             let resolved = try await RouteResolver.resolve(destinationInput, near: locationService.location)
             destination = resolved
@@ -176,6 +175,7 @@ final class NavigationViewModel: ObservableObject {
             request.destination = MKMapItem(placemark: MKPlacemark(coordinate: resolved.coordinate))
             request.transportType = .automobile
             request.requestsAlternateRoutes = false
+
             let response = try await MKDirections(request: request).calculate()
             guard let route = response.routes.first else { throw NavigationError.routeNotFound }
             self.route = route
@@ -203,7 +203,9 @@ final class NavigationViewModel: ObservableObject {
     func importURL(_ url: URL) {
         if url.scheme?.lowercased() == "ridedash" {
             let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-            if let value = components?.queryItems?.first(where: { ["url", "q", "destination"].contains($0.name.lowercased()) })?.value {
+            if let value = components?.queryItems?.first(where: {
+                ["url", "q", "destination"].contains($0.name.lowercased())
+            })?.value {
                 destinationInput = value
             }
         } else {
@@ -212,14 +214,15 @@ final class NavigationViewModel: ObservableObject {
     }
 
     func handleDashButton(_ button: DashButton) {
+        guard let route, !route.steps.isEmpty else { return }
+        let lastIndex = route.steps.count - 1
         switch button {
         case .left:
             activeStepIndex = max(firstUsableStep(in: route), activeStepIndex - 1)
         case .right:
-            if let route { activeStepIndex = min(route.steps.count - 1, activeStepIndex + 1) }
+            activeStepIndex = min(lastIndex, activeStepIndex + 1)
         case .down, .click:
-            // Recenter/return to live guidance rather than changing vehicle state.
-            if let route, let location = locationService.location {
+            if let location = locationService.location {
                 activeStepIndex = nearestUpcomingStep(in: route, to: location)
             }
         }
@@ -228,7 +231,7 @@ final class NavigationViewModel: ObservableObject {
 
     private func handleLocation(_ location: CLLocation?) {
         guard let location else { return }
-        if let route {
+        if let route, !route.steps.isEmpty {
             let suggested = nearestUpcomingStep(in: route, to: location)
             if suggested >= activeStepIndex { activeStepIndex = suggested }
         }
@@ -245,9 +248,10 @@ final class NavigationViewModel: ObservableObject {
             return
         }
 
-        let index = min(max(0, activeStepIndex), max(0, route.steps.count - 1))
-        let step = route.steps.isEmpty ? nil : route.steps[index]
-        let instruction = step?.instructions.isEmpty == false ? step!.instructions : "Continue"
+        let step: MKRoute.Step? = route.steps.isEmpty
+            ? nil
+            : route.steps[min(max(0, activeStepIndex), route.steps.count - 1)]
+        let instruction = (step?.instructions.isEmpty == false) ? (step?.instructions ?? "Continue") : "Continue"
         let distance = step.map { Self.formatDistance($0.distance) } ?? "--"
         let etaDate = Date().addingTimeInterval(route.expectedTravelTime)
         let etaFormatter = DateFormatter()
@@ -267,21 +271,23 @@ final class NavigationViewModel: ObservableObject {
     }
 
     private func firstUsableStep(in route: MKRoute?) -> Int {
-        guard let route else { return 0 }
+        guard let route, !route.steps.isEmpty else { return 0 }
         return route.steps.firstIndex(where: { !$0.instructions.isEmpty && $0.distance > 0 }) ?? 0
     }
 
     private func nearestUpcomingStep(in route: MKRoute, to location: CLLocation) -> Int {
         guard !route.steps.isEmpty else { return 0 }
-        var bestIndex = activeStepIndex
+        let start = min(max(0, activeStepIndex), route.steps.count - 1)
+        var bestIndex = start
         var bestDistance = CLLocationDistance.greatestFiniteMagnitude
-        for index in activeStepIndex..<route.steps.count {
+
+        for index in start..<route.steps.count {
             let step = route.steps[index]
-            let points = step.polyline.points()
             guard step.polyline.pointCount > 0 else { continue }
-            let coordinate = points[max(0, step.polyline.pointCount - 1)].coordinate
-            let end = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-            let distance = location.distance(from: end)
+            let points = step.polyline.points()
+            let endPoint = points[step.polyline.pointCount - 1].coordinate
+            let endLocation = CLLocation(latitude: endPoint.latitude, longitude: endPoint.longitude)
+            let distance = location.distance(from: endLocation)
             if distance < bestDistance {
                 bestDistance = distance
                 bestIndex = index
@@ -292,8 +298,9 @@ final class NavigationViewModel: ObservableObject {
     }
 
     private static func formatDistance(_ meters: CLLocationDistance) -> String {
-        if meters < 1_000 { return "\(Int(max(0, meters).rounded())) m" }
-        return String(format: "%.1f km", meters / 1_000)
+        let safeMeters = max(0, meters)
+        if safeMeters < 1_000 { return "\(Int(safeMeters.rounded())) m" }
+        return String(format: "%.1f km", safeMeters / 1_000)
     }
 }
 
