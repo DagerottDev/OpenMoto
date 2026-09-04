@@ -1,12 +1,17 @@
+import CoreLocation
+import SwiftData
 import SwiftUI
 
 struct RootView: View {
     enum Tab: Hashable { case home, navigation, garage, expenses, rides, settings }
 
+    @Environment(\.modelContext) private var modelContext
     @StateObject private var session = DashSessionCoordinator()
     @StateObject private var navigation = NavigationViewModel()
     @StateObject private var streamer = ProjectionStreamer()
     @State private var selectedTab: Tab = .home
+    @State private var activeRide: RideRecord?
+    @State private var previousRideLocation: CLLocation?
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -44,10 +49,55 @@ struct RootView: View {
             }
             navigation.startLocation()
         }
+        .onChange(of: session.state) { oldState, newState in
+            handleSessionTransition(from: oldState, to: newState)
+        }
+        .onReceive(navigation.locationService.$location.compactMap { $0 }) { location in
+            recordRideLocation(location)
+        }
         .onOpenURL { url in
             navigation.importURL(url)
             selectedTab = .navigation
         }
+    }
+
+    private func handleSessionTransition(from oldState: DashSessionCoordinator.State, to newState: DashSessionCoordinator.State) {
+        if newState == .projecting, activeRide == nil {
+            let ride = RideRecord(
+                startedAt: .now,
+                destination: navigation.destination?.name ?? "",
+                distanceKm: 0,
+                notes: "Recorded automatically during display projection"
+            )
+            modelContext.insert(ride)
+            activeRide = ride
+            previousRideLocation = navigation.locationService.location
+            session.log.append("Automatic ride recording started", category: "ride")
+        }
+
+        if oldState == .projecting, newState != .projecting, let ride = activeRide {
+            ride.endedAt = .now
+            activeRide = nil
+            previousRideLocation = nil
+            session.log.append(
+                "Automatic ride recording stopped at \(String(format: "%.2f", ride.distanceKm)) km",
+                category: "ride"
+            )
+        }
+    }
+
+    private func recordRideLocation(_ location: CLLocation) {
+        guard let ride = activeRide,
+              location.horizontalAccuracy >= 0,
+              location.horizontalAccuracy <= 50 else { return }
+
+        defer { previousRideLocation = location }
+        guard let previousRideLocation else { return }
+
+        let delta = location.distance(from: previousRideLocation)
+        // Ignore GPS jitter and implausible one-sample jumps. Real route deviation is handled separately.
+        guard delta >= 2, delta <= 500 else { return }
+        ride.distanceKm += delta / 1_000
     }
 }
 
