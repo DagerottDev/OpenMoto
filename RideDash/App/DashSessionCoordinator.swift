@@ -36,6 +36,9 @@ final class DashSessionCoordinator: ObservableObject {
     @Published private(set) var state: State = .disconnected
     @Published private(set) var lastButton: DashButton?
     @Published private(set) var authenticatedSession: DashAuthenticatedSession?
+    @Published private(set) var reconnectAttempt = 0
+    @Published private(set) var lastReconnectReason: String?
+    @Published var automaticReconnectEnabled = true
     @Published var routeTitle = "Navigation"
 
     let transport: DashTransport
@@ -53,19 +56,41 @@ final class DashSessionCoordinator: ObservableObject {
     private var pendingAESKey: Data?
     private var authConfirmed = false
     private var navEntered = false
+    private var shouldMaintainConnection = false
+    private var restoreNavigationAfterReconnect = false
+    private var authRejectCount = 0
+    private var consecutiveSendFailures = 0
+
+    private var lastAcceptedButton: DashButton?
+    private var lastAcceptedButtonAt = Date.distantPast
+    private let buttonDebounceInterval: TimeInterval = 0.12
 
     private var authTimeoutTask: Task<Void, Never>?
     private var projectionHeartbeatTask: Task<Void, Never>?
     private var routeHeartbeatTask: Task<Void, Never>?
     private var navInfoHeartbeatTask: Task<Void, Never>?
     private var statusHeartbeatTask: Task<Void, Never>?
+    private var reconnectTask: Task<Void, Never>?
+    private var transportStateCancellable: AnyCancellable?
+
+    private let maximumReconnectAttempts = 5
 
     init(transport: DashTransport = DashTransport(), log: DiagnosticLog = DiagnosticLog()) {
         self.transport = transport
         self.log = log
+
         transport.onDatagram = { [weak self] datagram in
             Task { @MainActor in self?.handle(datagram) }
         }
+
+        transportStateCancellable = transport.$state
+            .dropFirst()
+            .sink { [weak self] transportState in
+                guard let self else { return }
+                if case .failed(let message) = transportState {
+                    self.scheduleReconnect(reason: "Transport failed: \(message)")
+                }
+            }
     }
 
     func connect(
@@ -74,39 +99,33 @@ final class DashSessionCoordinator: ObservableObject {
         profile: DashProtocolProfile = .publicReference,
         authTimeout: Duration = .seconds(8)
     ) async {
-        disconnect()
+        reconnectTask?.cancel()
+        reconnectTask = nil
+        reconnectAttempt = 0
+        lastReconnectReason = nil
+        shouldMaintainConnection = true
+        restoreNavigationAfterReconnect = false
+
         self.ssid = ssid.trimmingCharacters(in: .whitespacesAndNewlines)
         self.hostname = hostname.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "iPhone" : hostname
         self.profile = profile
 
         guard !self.ssid.isEmpty else {
+            shouldMaintainConnection = false
             state = .failed("Display SSID is required")
             return
         }
 
-        do {
-            state = .startingTransport
-            try transport.start(profile: profile)
-            log.append("Control/input/video UDP transport requested", category: "session")
-            try await waitForTransportReady(timeout: .seconds(3))
-
-            state = .requestingAuthentication
-            try await sendInitialBurst()
-            state = .awaitingPublicKey
-            log.append("Initial K1G burst sent; awaiting RSA public key", category: "auth")
-            startAuthTimeout(authTimeout)
-        } catch {
-            state = .failed(error.localizedDescription)
-            log.append(error.localizedDescription, category: "session", level: .error)
-        }
+        await establishConnection(authTimeout: authTimeout)
     }
 
     func retryLastConnection() async {
-        let currentSSID = ssid
-        let currentHostname = hostname
-        let currentProfile = profile
-        guard !currentSSID.isEmpty else { return }
-        await connect(ssid: currentSSID, hostname: currentHostname, profile: currentProfile)
+        guard !ssid.isEmpty else { return }
+        reconnectTask?.cancel()
+        reconnectTask = nil
+        reconnectAttempt = 0
+        shouldMaintainConnection = true
+        await establishConnection(authTimeout: .seconds(8))
     }
 
     func enterNavigation(title: String? = nil) async throws {
@@ -164,6 +183,7 @@ final class DashSessionCoordinator: ObservableObject {
         projectionHeartbeatTask?.cancel()
         cancelNavigationKeepAlives()
         projectionHeartbeatTask = nil
+        restoreNavigationAfterReconnect = false
 
         guard navEntered else { return }
         state = .stopping
@@ -181,13 +201,74 @@ final class DashSessionCoordinator: ObservableObject {
     }
 
     func disconnect() {
+        shouldMaintainConnection = false
+        reconnectTask?.cancel()
+        reconnectTask = nil
+        reconnectAttempt = 0
+        lastReconnectReason = nil
+        restoreNavigationAfterReconnect = false
+        resetSessionState(stopTransport: true)
+        state = .disconnected
+    }
+
+    // MARK: - Connection / recovery
+
+    private func establishConnection(authTimeout: Duration) async {
+        resetSessionState(stopTransport: true)
+
+        do {
+            state = .startingTransport
+            try transport.start(profile: profile)
+            log.append("Control/input/video UDP transport requested", category: "session")
+            try await waitForTransportReady(timeout: .seconds(3))
+
+            state = .requestingAuthentication
+            try await sendInitialBurst()
+            state = .awaitingPublicKey
+            log.append("Initial K1G burst sent; awaiting RSA public key", category: "auth")
+            startAuthTimeout(authTimeout)
+        } catch {
+            state = .failed(error.localizedDescription)
+            log.append(error.localizedDescription, category: "session", level: .error)
+            scheduleReconnect(reason: error.localizedDescription)
+        }
+    }
+
+    private func scheduleReconnect(reason: String) {
+        guard shouldMaintainConnection,
+              automaticReconnectEnabled,
+              reconnectTask == nil,
+              reconnectAttempt < maximumReconnectAttempts else { return }
+
+        if navEntered || state == .navigationReady || state == .projecting {
+            restoreNavigationAfterReconnect = true
+        }
+
+        reconnectAttempt += 1
+        lastReconnectReason = reason
+        let delaySeconds = min(16, 1 << max(0, reconnectAttempt - 1))
+        log.append(
+            "Reconnect \(reconnectAttempt)/\(maximumReconnectAttempts) scheduled in \(delaySeconds)s: \(reason)",
+            category: "reconnect",
+            level: .warning
+        )
+
+        reconnectTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(delaySeconds))
+            guard !Task.isCancelled, let self, self.shouldMaintainConnection else { return }
+            self.reconnectTask = nil
+            await self.establishConnection(authTimeout: .seconds(8))
+        }
+    }
+
+    private func resetSessionState(stopTransport: Bool) {
         authTimeoutTask?.cancel()
         projectionHeartbeatTask?.cancel()
         cancelNavigationKeepAlives()
         authTimeoutTask = nil
         projectionHeartbeatTask = nil
 
-        transport.stop()
+        if stopTransport { transport.stop() }
         sequence = 0
         modulus = nil
         exponent = nil
@@ -195,8 +276,11 @@ final class DashSessionCoordinator: ObservableObject {
         authenticatedSession = nil
         authConfirmed = false
         navEntered = false
+        authRejectCount = 0
+        consecutiveSendFailures = 0
         lastButton = nil
-        state = .disconnected
+        lastAcceptedButton = nil
+        lastAcceptedButtonAt = .distantPast
     }
 
     // MARK: - Receive path
@@ -224,14 +308,31 @@ final class DashSessionCoordinator: ObservableObject {
                 authTimeoutTask?.cancel()
                 guard let key = pendingAESKey else {
                     state = .failed("Dash accepted auth but no local session key is available")
+                    scheduleReconnect(reason: "Auth accepted without local session material")
                     return
                 }
                 authenticatedSession = DashAuthenticatedSession(aesKey: key)
                 pendingAESKey = nil
                 authConfirmed = true
+                authRejectCount = 0
+                reconnectAttempt = 0
+                lastReconnectReason = nil
                 state = .authenticated
                 log.append("Dash authentication accepted", category: "auth")
                 onAuthenticated?()
+
+                if restoreNavigationAfterReconnect {
+                    restoreNavigationAfterReconnect = false
+                    Task { [weak self] in
+                        guard let self else { return }
+                        do {
+                            try await self.enterNavigation(title: self.routeTitle)
+                            self.log.append("Navigation mode restored after reconnect", category: "reconnect")
+                        } catch {
+                            self.log.append(error.localizedDescription, category: "reconnect", level: .error)
+                        }
+                    }
+                }
 
             case .authRejected(let status):
                 pendingAESKey = nil
@@ -239,12 +340,20 @@ final class DashSessionCoordinator: ObservableObject {
                 authConfirmed = false
                 modulus = nil
                 exponent = nil
-                state = .requestingAuthentication
+                authRejectCount += 1
                 log.append(
-                    "Dash authentication rejected status=0x\(String(format: "%02X", status))",
+                    "Dash authentication rejected status=0x\(String(format: "%02X", status)); attempt \(authRejectCount)/3",
                     category: "auth",
                     level: .error
                 )
+
+                guard authRejectCount < 3 else {
+                    state = .failed("Authentication rejected repeatedly")
+                    scheduleReconnect(reason: "Authentication rejected three times")
+                    return
+                }
+
+                state = .requestingAuthentication
                 Task { [weak self] in
                     guard let self else { return }
                     try? await self.sendHex(K1GCodec.requestAuthHex)
@@ -252,9 +361,20 @@ final class DashSessionCoordinator: ObservableObject {
                 }
 
             case .button(let button):
+                let now = Date()
+                let isRepeat = lastAcceptedButton == button && now.timeIntervalSince(lastAcceptedButtonAt) < buttonDebounceInterval
+
                 lastButton = button
-                log.append("Dash input: \(String(describing: button))", category: "input")
-                onButton?(button)
+                if !isRepeat {
+                    lastAcceptedButton = button
+                    lastAcceptedButtonAt = now
+                    log.append("Dash input: \(String(describing: button))", category: "input")
+                    onButton?(button)
+                } else {
+                    log.append("Debounced repeated dash input: \(String(describing: button))", category: "input")
+                }
+
+                // Ack even debounced repeats so the embedded sender never waits for an app response.
                 if profile.respondToInput {
                     Task { [weak self] in
                         guard let self,
@@ -297,6 +417,7 @@ final class DashSessionCoordinator: ObservableObject {
                 self.pendingAESKey = nil
                 self.state = .failed(error.localizedDescription)
                 self.log.append(error.localizedDescription, category: "auth", level: .error)
+                self.scheduleReconnect(reason: error.localizedDescription)
             }
         }
     }
@@ -318,7 +439,16 @@ final class DashSessionCoordinator: ObservableObject {
     private func sendRaw(_ packet: Data) async throws {
         let patched = try K1GCodec.patchSequence(packet, sequence: sequence)
         sequence &+= 1
-        try await transport.sendControl(patched)
+        do {
+            try await transport.sendControl(patched)
+            consecutiveSendFailures = 0
+        } catch {
+            consecutiveSendFailures += 1
+            if consecutiveSendFailures >= 3 {
+                scheduleReconnect(reason: "Repeated UDP send failures")
+            }
+            throw error
+        }
     }
 
     // MARK: - Navigation keep-alives
@@ -421,6 +551,7 @@ final class DashSessionCoordinator: ObservableObject {
             guard !Task.isCancelled, let self, !self.authConfirmed else { return }
             self.state = .failed("Authentication timed out")
             self.log.append("Authentication timeout", category: "auth", level: .error)
+            self.scheduleReconnect(reason: "Authentication timed out")
         }
     }
 
