@@ -67,7 +67,6 @@ struct K1GEnvelope: Hashable, Sendable {
 }
 
 enum K1GCodec {
-    // Public interoperability reference packets. Sequence byte is patched before send.
     static let requestAuthHex = "0016000200000000020100054B314720000804000101"
     static let sessionKeyPrefixHex = "0095000200000000020100054B3147200008000080"
     static let navContextHex = "0016000200000000020100054B31472000052E00011E"
@@ -79,7 +78,6 @@ enum K1GCodec {
     static let projectionOffHex = "0016000200000000020100054B3147200006050001AA"
     static let buttonAckPrefixHex = "0016000200000000020100054B3147200006800001"
 
-    // Initial app-like burst. nil marks the dynamic hostname announce slot.
     static let initialBurst: [String?] = [
         requestAuthHex,
         nil,
@@ -92,7 +90,6 @@ enum K1GCodec {
         "0044000A00000000020100054B3147200906080001FF060300015506040001A2060F0001AA0601000101054C000113052D00020000051B0001190521000132054D000132"
     ]
 
-    // Reference route-card packet used only as a template. buildRouteCard replaces title and length.
     private static let navTemplateHex =
         "007E001100000000020100054B31472025050100145461696C6C65206465204D617320647520477200" +
         "050200013C050300013405050002000A05060001300507000130050800043033303305540001300509" +
@@ -112,23 +109,18 @@ enum K1GCodec {
             let subtype = data[offset + 1]
             let length = Int(data[offset + 2]) << 8 | Int(data[offset + 3])
             offset += 4
-            guard offset <= data.count else { break }
             let end = min(data.count, offset + length)
-            let payload = Data(data[offset..<end])
-            segments.append(.init(type: type, subtype: subtype, payload: payload))
+            guard offset <= end else { break }
+            segments.append(.init(type: type, subtype: subtype, payload: Data(data[offset..<end])))
             offset = end
         }
 
-        return K1GEnvelope(
-            outerLength: outerLength,
-            declaredSegmentCount: segmentCount,
-            segments: segments
-        )
+        return K1GEnvelope(outerLength: outerLength, declaredSegmentCount: segmentCount, segments: segments)
     }
 
     static func patchSequence(_ packet: Data, sequence: UInt8) throws -> Data {
         var bytes = [UInt8](packet)
-        let marker: [UInt8] = [0x4B, 0x31, 0x47, 0x20] // K1G<space>
+        let marker: [UInt8] = [0x4B, 0x31, 0x47, 0x20]
         guard let markerIndex = find(marker, in: bytes), markerIndex + 4 < bytes.count else {
             throw DashProtocolError.missingK1GMarker
         }
@@ -139,8 +131,7 @@ enum K1GCodec {
     static func hostnameAnnounce(_ hostname: String) -> Data {
         let raw = Data(hostname.utf8.prefix(200))
         var body = (try? HexCodec.data(from: "0021000200000000020100054B314720")) ?? Data()
-        let lengthField = UInt8(clamping: raw.count + 1)
-        body.append(contentsOf: [0x01, 0x06, 0x0B, 0x00, lengthField])
+        body.append(contentsOf: [0x01, 0x06, 0x0B, 0x00, UInt8(clamping: raw.count + 1)])
         body.append(raw)
         body.append(0)
         setUInt16BE(UInt16(clamping: body.count), at: 0, in: &body)
@@ -163,11 +154,10 @@ enum K1GCodec {
         let oldLength = Int(template[titleTLVOffset + 2]) << 8 | Int(template[titleTLVOffset + 3])
         let oldTitleStart = titleTLVOffset + 4
         let oldTitleEnd = min(template.count, oldTitleStart + oldLength)
-
         let titleData = Data(title.utf8.prefix(60)) + Data([0])
-        var output = Data()
-        output.append(template.prefix(oldTitleStart))
-        var lengthBytes = withUnsafeBytes(of: UInt16(clamping: titleData.count).bigEndian) { Data($0) }
+
+        var output = Data(template.prefix(oldTitleStart))
+        let lengthBytes = withUnsafeBytes(of: UInt16(clamping: titleData.count).bigEndian) { Data($0) }
         output.replaceSubrange(titleTLVOffset + 2..<titleTLVOffset + 4, with: lengthBytes)
         output.append(titleData)
         output.append(template.suffix(from: oldTitleEnd))
@@ -191,8 +181,8 @@ enum K1GCodec {
 
     private static func find(_ needle: [UInt8], in haystack: [UInt8]) -> Int? {
         guard !needle.isEmpty, haystack.count >= needle.count else { return nil }
-        for i in 0...(haystack.count - needle.count) where Array(haystack[i..<(i + needle.count)]) == needle {
-            return i
+        for i in 0...(haystack.count - needle.count) {
+            if haystack[i..<(i + needle.count)].elementsEqual(needle) { return i }
         }
         return nil
     }
@@ -225,27 +215,19 @@ enum DashProtocolEvent: Hashable, Sendable {
 enum DashEventDecoder {
     static func events(from datagram: Data) -> [DashProtocolEvent] {
         guard let envelope = K1GCodec.decode(datagram) else { return [] }
-        var events: [DashProtocolEvent] = []
-        for segment in envelope.segments {
+        return envelope.segments.map { segment in
             switch (segment.type, segment.subtype) {
-            case (0x07, 0x00):
-                events.append(.rsaModulus(segment.payload))
-            case (0x07, 0x03):
-                events.append(.rsaExponent(segment.payload))
+            case (0x07, 0x00): return .rsaModulus(segment.payload)
+            case (0x07, 0x03): return .rsaExponent(segment.payload)
             case (0x07, 0x01):
                 let status = segment.payload.first ?? 0
-                events.append(status == 0x01 ? .authAccepted : .authRejected(status))
+                return status == 0x01 ? .authAccepted : .authRejected(status)
             case (0x09, 0x00):
-                if let byte = segment.payload.first, let button = DashButton(rawValue: byte) {
-                    events.append(.button(button))
-                } else {
-                    events.append(.segment(segment))
-                }
-            default:
-                events.append(.segment(segment))
+                if let value = segment.payload.first, let button = DashButton(rawValue: value) { return .button(button) }
+                return .segment(segment)
+            default: return .segment(segment)
             }
         }
-        return events
     }
 }
 
@@ -263,8 +245,6 @@ enum DashAuthenticator {
         return Data(bytes)
     }
 
-    /// Public interoperability behavior: payload = UTF8(SSID) || 32-byte AES key,
-    /// encrypted with the dash-provided RSA-1024 key using PKCS#1 v1.5 padding.
     static func encryptedSessionPayload(
         ssid: String,
         modulus: Data,
@@ -278,16 +258,20 @@ enum DashAuthenticator {
             kSecAttrKeyClass: kSecAttrKeyClassPublic,
             kSecAttrKeySizeInBits: modulus.count * 8
         ]
+
         var error: Unmanaged<CFError>?
         guard let key = SecKeyCreateWithData(publicKeyDER as CFData, attributes as CFDictionary, &error) else {
-            throw error?.takeRetainedValue() ?? DashProtocolError.publicKeyCreationFailed as CFError
+            if let error { throw error.takeRetainedValue() }
+            throw DashProtocolError.publicKeyCreationFailed
         }
         guard SecKeyIsAlgorithmSupported(key, .encrypt, .rsaEncryptionPKCS1) else {
             throw DashProtocolError.unsupportedRSAAlgorithm
         }
+
         let payload = Data(ssid.utf8) + aesKey
         guard let encrypted = SecKeyCreateEncryptedData(key, .rsaEncryptionPKCS1, payload as CFData, &error) else {
-            throw error?.takeRetainedValue() ?? DashProtocolError.rsaEncryptionFailed as CFError
+            if let error { throw error.takeRetainedValue() }
+            throw DashProtocolError.rsaEncryptionFailed
         }
         return encrypted as Data
     }
@@ -295,15 +279,12 @@ enum DashAuthenticator {
 
 private enum DER {
     static func rsaPublicKey(modulus: Data, exponent: Data) -> Data {
-        let n = integer(modulus)
-        let e = integer(exponent)
-        return sequence(n + e)
+        sequence(integer(modulus) + integer(exponent))
     }
 
     private static func integer(_ raw: Data) -> Data {
-        var value = raw.drop { $0 == 0 }
-        if value.isEmpty { value = Data([0]) }
-        var body = Data(value)
+        var body = Data(raw.drop(while: { $0 == 0 }))
+        if body.isEmpty { body.append(0) }
         if let first = body.first, first & 0x80 != 0 { body.insert(0, at: 0) }
         return Data([0x02]) + length(body.count) + body
     }
@@ -323,8 +304,6 @@ private enum DER {
         return Data([0x80 | UInt8(bytes.count)]) + Data(bytes)
     }
 }
-
-// MARK: - Errors
 
 enum DashProtocolError: LocalizedError {
     case invalidHex
