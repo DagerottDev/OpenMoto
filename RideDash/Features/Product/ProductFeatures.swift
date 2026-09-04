@@ -2,6 +2,7 @@ import MapKit
 import SwiftData
 import SwiftUI
 import UIKit
+import UserNotifications
 
 // MARK: - Local models
 
@@ -203,6 +204,9 @@ struct DashboardView: View {
                         .fill(connectionColor)
                         .frame(width: 12, height: 12)
                 }
+                if session.reconnectAttempt > 0 {
+                    LabeledContent("Reconnect", value: "\(session.reconnectAttempt)/5")
+                }
             }
 
             Section("Active vehicle") {
@@ -221,6 +225,9 @@ struct DashboardView: View {
                 LabeledContent("Destination", value: navigation.destination?.name ?? "Not set")
                 LabeledContent("Instruction", value: navigation.projectionState.maneuver)
                 LabeledContent("Next turn", value: navigation.projectionState.distanceToManeuver)
+                if navigation.recalculationCount > 0 {
+                    LabeledContent("Reroutes", value: "\(navigation.recalculationCount)")
+                }
             }
 
             Section("This month") {
@@ -285,7 +292,7 @@ struct RideNavigationView: View {
                     Button {
                         Task { await navigation.calculateRoute() }
                     } label: {
-                        if navigation.isCalculating {
+                        if navigation.isCalculating || navigation.isRecalculating {
                             ProgressView()
                         } else {
                             Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
@@ -307,6 +314,11 @@ struct RideNavigationView: View {
                             Text("\(navigation.projectionState.distanceToManeuver) · ETA \(navigation.projectionState.eta)")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                            if navigation.isRecalculating {
+                                Text("Recalculating route…")
+                                    .font(.caption2)
+                                    .foregroundStyle(.orange)
+                            }
                         }
                         Spacer()
                         Button("Apple Maps") { navigation.openInAppleMaps() }
@@ -423,9 +435,18 @@ struct DisplayConnectionView: View {
 
             Section("Session") {
                 TextField("Phone hostname", text: $hostname)
+                Toggle("Automatic reconnect", isOn: $session.automaticReconnectEnabled)
                 LabeledContent("State", value: session.state.label)
                 LabeledContent("RX packets", value: "\(session.transport.receivedPackets)")
                 LabeledContent("TX packets", value: "\(session.transport.sentPackets)")
+                if session.reconnectAttempt > 0 {
+                    LabeledContent("Reconnect attempt", value: "\(session.reconnectAttempt)/5")
+                }
+                if let reason = session.lastReconnectReason {
+                    Text(reason)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 if let button = session.lastButton {
                     LabeledContent("Last dash input", value: String(describing: button))
                 }
@@ -686,6 +707,15 @@ struct GarageView: View {
                         Text("\(entry.odometerKm, specifier: "%.0f") km · \(entry.date.formatted(date: .abbreviated, time: .omitted))")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                        if let dueDate = entry.nextDueDate {
+                            Text("Due \(dueDate.formatted(date: .abbreviated, time: .omitted))")
+                                .font(.caption2)
+                                .foregroundStyle(.orange)
+                        } else if let dueKm = entry.nextDueKm {
+                            Text("Due at \(dueKm, specifier: "%.0f") km")
+                                .font(.caption2)
+                                .foregroundStyle(.orange)
+                        }
                     }
                 }
             }
@@ -746,27 +776,103 @@ struct AddMaintenanceView: View {
     @State private var kind: MaintenanceKind = .service
     @State private var odometer = 0.0
     @State private var notes = ""
+    @State private var nextDueKmEnabled = false
+    @State private var nextDueKm = 0.0
+    @State private var nextDueDateEnabled = false
+    @State private var nextDueDate = Calendar.current.date(byAdding: .month, value: 6, to: .now) ?? .now
 
     var body: some View {
         NavigationStack {
             Form {
-                Picker("Type", selection: $kind) {
-                    ForEach(MaintenanceKind.allCases) { Text($0.rawValue).tag($0) }
+                Section("Maintenance") {
+                    Picker("Type", selection: $kind) {
+                        ForEach(MaintenanceKind.allCases) { Text($0.rawValue).tag($0) }
+                    }
+                    TextField("Odometer km", value: $odometer, format: .number).keyboardType(.decimalPad)
+                    TextField("Notes", text: $notes, axis: .vertical)
                 }
-                TextField("Odometer km", value: $odometer, format: .number).keyboardType(.decimalPad)
-                TextField("Notes", text: $notes, axis: .vertical)
+
+                Section("Next due") {
+                    Toggle("Track next due odometer", isOn: $nextDueKmEnabled)
+                    if nextDueKmEnabled {
+                        TextField("Next due km", value: $nextDueKm, format: .number)
+                            .keyboardType(.decimalPad)
+                    }
+
+                    Toggle("Remind on a date", isOn: $nextDueDateEnabled)
+                    if nextDueDateEnabled {
+                        DatePicker("Due date", selection: $nextDueDate, displayedComponents: .date)
+                        Text("RideDash will request notification permission when you save this reminder.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
             .navigationTitle("Maintenance")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        context.insert(MaintenanceRecord(kind: kind, odometerKm: odometer, notes: notes))
+                        let record = MaintenanceRecord(
+                            kind: kind,
+                            odometerKm: odometer,
+                            notes: notes,
+                            nextDueKm: nextDueKmEnabled ? nextDueKm : nil,
+                            nextDueDate: nextDueDateEnabled ? nextDueDate : nil
+                        )
+                        context.insert(record)
+                        if nextDueDateEnabled {
+                            Task {
+                                await MaintenanceReminderScheduler.schedule(
+                                    id: record.id,
+                                    title: record.kind.rawValue,
+                                    dueDate: nextDueDate
+                                )
+                            }
+                        }
                         dismiss()
                     }
                 }
             }
         }
+    }
+}
+
+enum MaintenanceReminderScheduler {
+    static func schedule(id: UUID, title: String, dueDate: Date) async {
+        guard dueDate > .now else { return }
+        let center = UNUserNotificationCenter.current()
+
+        do {
+            let settings = await center.notificationSettings()
+            var authorized = settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
+            if settings.authorizationStatus == .notDetermined {
+                authorized = try await center.requestAuthorization(options: [.alert, .sound, .badge])
+            }
+            guard authorized else { return }
+
+            let identifier = "maintenance-\(id.uuidString)"
+            center.removePendingNotificationRequests(withIdentifiers: [identifier])
+
+            let content = UNMutableNotificationContent()
+            content.title = "Maintenance due"
+            content.body = "\(title) is due today. Open RideDash to review your garage log."
+            content.sound = .default
+
+            var components = Calendar.current.dateComponents([.year, .month, .day], from: dueDate)
+            components.hour = 9
+            components.minute = 0
+            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+            try await center.add(UNNotificationRequest(identifier: identifier, content: content, trigger: trigger))
+        } catch {
+            // Reminder failure must never block saving maintenance history.
+        }
+    }
+
+    static func cancel(id: UUID) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(
+            withIdentifiers: ["maintenance-\(id.uuidString)"]
+        )
     }
 }
 
@@ -981,11 +1087,20 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Section("Maintenance reminders") {
+                Text("When a maintenance entry includes a due date, RideDash schedules a local notification for 9:00 AM on that date after you grant notification permission.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Safety") {
                 Text("RideDash limits display integration to navigation/infotainment. It does not send ECU, throttle, brake, ABS, immobilizer or other safety-critical vehicle-control commands.")
                     .font(.caption)
             }
         }
         .navigationTitle("Settings")
+        .onAppear {
+            navigation.locationService.setBackgroundNavigationEnabled(backgroundLocation)
+        }
     }
 }
