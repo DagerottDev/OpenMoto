@@ -45,12 +45,21 @@ final class TripperWiFiManager: ObservableObject, DashWiFiJoining {
                 isWEP: false
             )
         }
-        configuration.joinOnce = true
+
+        // Persist the app-managed accessory-network configuration instead of using
+        // joinOnce. Projection sessions can last for hours and joinOnce is intentionally
+        // short-lived. The user can remove this configuration explicitly from RideDash.
+        configuration.joinOnce = false
 
         do {
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                 NEHotspotConfigurationManager.shared.apply(configuration) { error in
-                    if let error {
+                    if let nsError = error as NSError?,
+                       nsError.domain == NEHotspotConfigurationErrorDomain,
+                       nsError.code == NEHotspotConfigurationError.alreadyAssociated.rawValue {
+                        // Already being on the requested accessory network is success for our flow.
+                        continuation.resume(returning: ())
+                    } else if let error {
                         continuation.resume(throwing: error)
                     } else {
                         continuation.resume(returning: ())
