@@ -1,0 +1,12 @@
+RideDash
+Copyright (c) 2026 RideDash contributors
+
+RideDash is an independent, brand-neutral motorcycle navigation and ride companion project.
+
+The compatible-display interoperability layer is based on publicly available interoperability research and clean-room reimplementation using public iOS APIs. The project does not include manufacturer firmware, private keys, proprietary certificates, extracted assets, or safety-critical vehicle-control functionality.
+
+Some protocol behavior and packet sequencing were informed by publicly available open-source projects and research notes, including OpenDash / better-dash style motorcycle display interoperability work. Review and preserve the license notices of any third-party source code that is directly incorporated in future changes.
+
+Royal Enfield, Tripper, and any other third-party product or company names are trademarks of their respective owners. RideDash is not affiliated with, endorsed by, or sponsored by those trademark owners.
+
+The project permanently excludes ECU, throttle, brakes, ABS, traction control, immobilizer, firmware modification, engine control, and other safety-critical vehicle command paths.
