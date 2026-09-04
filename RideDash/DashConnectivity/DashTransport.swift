@@ -178,7 +178,6 @@ final class DashTransport: ObservableObject {
             state = .failed("Control: \(error.localizedDescription)")
         case .cancelled:
             controlReady = false
-            if inputListener == nil { state = .stopped }
         @unknown default:
             state = .waiting("Unknown control transport state")
         }
@@ -186,10 +185,11 @@ final class DashTransport: ObservableObject {
 
     private func handleListenerState(_ newState: NWListener.State) {
         switch newState {
-        case .setup, .waiting:
-            if case .waiting(let error) = newState {
-                state = .waiting("Input listener: \(error.localizedDescription)")
-            }
+        case .setup:
+            listenerReady = false
+        case .waiting(let error):
+            listenerReady = false
+            state = .waiting("Input listener: \(error.localizedDescription)")
         case .ready:
             listenerReady = true
             updateReadyState()
