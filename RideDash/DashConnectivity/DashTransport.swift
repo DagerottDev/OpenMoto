@@ -99,7 +99,7 @@ final class DashTransport: ObservableObject {
             Task { @MainActor in self?.handleListenerState(newState) }
         }
         listener.newConnectionHandler = { [weak self] connection in
-            self?.acceptInput(connection)
+            Task { @MainActor in self?.acceptInput(connection) }
         }
         listener.start(queue: queue)
     }
@@ -212,14 +212,16 @@ final class DashTransport: ObservableObject {
         let id = ObjectIdentifier(connection)
         inputConnections[id] = connection
         connection.stateUpdateHandler = { [weak self, weak connection] state in
-            guard let self, let connection else { return }
-            switch state {
-            case .ready:
-                self.receiveNext(on: connection)
-            case .failed, .cancelled:
-                self.inputConnections.removeValue(forKey: id)
-            default:
-                break
+            Task { @MainActor in
+                guard let self, let connection else { return }
+                switch state {
+                case .ready:
+                    self.receiveNext(on: connection)
+                case .failed, .cancelled:
+                    self.inputConnections.removeValue(forKey: id)
+                default:
+                    break
+                }
             }
         }
         connection.start(queue: queue)
@@ -227,9 +229,9 @@ final class DashTransport: ObservableObject {
 
     private func receiveNext(on connection: NWConnection) {
         connection.receiveMessage { [weak self, weak connection] data, _, _, error in
-            guard let self, let connection else { return }
-            if let data, !data.isEmpty {
-                Task { @MainActor in
+            Task { @MainActor in
+                guard let self, let connection else { return }
+                if let data, !data.isEmpty {
                     self.receivedPackets += 1
                     self.emit(.init(
                         timestamp: .now,
@@ -239,8 +241,8 @@ final class DashTransport: ObservableObject {
                         data: data
                     ))
                 }
+                if error == nil { self.receiveNext(on: connection) }
             }
-            if error == nil { self.receiveNext(on: connection) }
         }
     }
 
