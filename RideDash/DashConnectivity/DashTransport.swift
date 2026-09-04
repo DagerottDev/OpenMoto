@@ -66,10 +66,20 @@ final class DashTransport: ObservableObject {
         controlReady = false
         listenerReady = false
 
+        // The public reference binds the control socket to UDP/2000 before broadcasting.
+        // Preserve that source-port behavior: some embedded firmwares use it as part of
+        // their fixed control-channel routing rather than replying to an arbitrary port.
+        let controlParameters = NWParameters.udp
+        controlParameters.allowLocalEndpointReuse = true
+        controlParameters.requiredLocalEndpoint = .hostPort(
+            host: NWEndpoint.Host("0.0.0.0"),
+            port: controlPort
+        )
+
         let control = NWConnection(
             host: NWEndpoint.Host(profile.broadcastHost),
             port: controlPort,
-            using: .udp
+            using: controlParameters
         )
         controlConnection = control
         control.stateUpdateHandler = { [weak self] newState in
