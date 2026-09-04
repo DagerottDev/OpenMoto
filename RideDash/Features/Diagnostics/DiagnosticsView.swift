@@ -6,7 +6,7 @@ struct DiagnosticsView: View {
     @StateObject private var transport = DashTransport()
     @StateObject private var log = DiagnosticLog()
 
-    @AppStorage("dash.test.bikeModel") private var bikeModel = "Guerrilla 450"
+    @AppStorage("dash.test.bikeModel") private var bikeModel = "Test motorcycle"
     @AppStorage("dash.test.firmware") private var dashFirmware = ""
     @AppStorage("dash.test.ssid") private var dashSSID = ""
     @AppStorage("dash.test.host") private var dashHost = "192.168.1.1"
@@ -36,6 +36,9 @@ struct DiagnosticsView: View {
             networkMonitor.start()
             log.append("Diagnostics screen opened", category: "app")
         }
+        .onDisappear {
+            transport.stop()
+        }
         .onChange(of: networkMonitor.statusText) { _, newValue in
             log.append("Path status: \(newValue); Wi-Fi=\(networkMonitor.usesWiFi)", category: "network")
         }
@@ -46,8 +49,8 @@ struct DiagnosticsView: View {
 
     private var hardwareSection: some View {
         Section("Hardware test profile") {
-            TextField("Bike model", text: $bikeModel)
-            TextField("Dash firmware", text: $dashFirmware)
+            TextField("Motorcycle model", text: $bikeModel)
+            TextField("Display firmware", text: $dashFirmware)
                 .textInputAutocapitalization(.never)
             LabeledContent("Phone", value: profile.iPhoneModel)
             LabeledContent("iOS", value: profile.iOSVersion)
@@ -56,14 +59,14 @@ struct DiagnosticsView: View {
 
     private var wiFiSection: some View {
         Section {
-            TextField("Dash Wi-Fi SSID", text: $dashSSID)
+            TextField("Display Wi-Fi SSID", text: $dashSSID)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
             SecureField("Wi-Fi password (if required)", text: $passphrase)
 
             Button("Request Wi-Fi Join") {
                 Task {
-                    log.append("Wi-Fi join requested for configured dash SSID", category: "wifi")
+                    log.append("Wi-Fi join requested for configured display SSID", category: "wifi")
                     do {
                         try await wiFiManager.join(ssid: dashSSID, passphrase: passphrase)
                         log.append("Wi-Fi join request completed", category: "wifi")
@@ -86,7 +89,7 @@ struct DiagnosticsView: View {
         } header: {
             Text("Wi-Fi")
         } footer: {
-            Text("RideDash uses Apple's Hotspot Configuration API. iOS controls the user approval flow. The password is kept only in this screen state and is never written to the diagnostic log.")
+            Text("The password exists only in this screen state and is never written to diagnostic logs.")
         }
     }
 
@@ -95,12 +98,10 @@ struct DiagnosticsView: View {
             LabeledContent("Path", value: networkMonitor.statusText)
             LabeledContent("Using Wi-Fi", value: networkMonitor.usesWiFi ? "Yes" : "No")
             if networkMonitor.interfaceNames.isEmpty {
-                Text("No interfaces reported yet")
-                    .foregroundStyle(.secondary)
+                Text("No interfaces reported yet").foregroundStyle(.secondary)
             } else {
                 ForEach(networkMonitor.interfaceNames, id: \.self) { name in
-                    Text(name)
-                        .font(.caption)
+                    Text(name).font(.caption)
                 }
             }
         }
@@ -108,7 +109,7 @@ struct DiagnosticsView: View {
 
     private var transportSection: some View {
         Section {
-            TextField("Dash host", text: $dashHost)
+            TextField("Display host", text: $dashHost)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
             TextField("UDP port", value: $dashPort, format: .number)
@@ -128,26 +129,26 @@ struct DiagnosticsView: View {
             }
 
             LabeledContent("Transport", value: transport.state.description)
+            LabeledContent("RX packets", value: "\(transport.receivedPackets)")
+            LabeledContent("TX packets", value: "\(transport.sentPackets)")
         } header: {
             Text("UDP diagnostic route")
         } footer: {
-            Text("A UDP connection reaching Ready only proves iOS has a route/socket. It does not prove the motorcycle dash responded. Phase 2 will add receive loops and validated, non-destructive protocol probes.")
+            Text("This screen is intentionally transport-only. Use Settings → Connection & Projection for authentication, navigation-mode control and H.264/RTP projection.")
         }
     }
 
     private var logSection: some View {
         Section {
             if log.entries.isEmpty {
-                Text("No diagnostic events yet")
-                    .foregroundStyle(.secondary)
+                Text("No diagnostic events yet").foregroundStyle(.secondary)
             } else {
                 ForEach(log.entries.suffix(30)) { entry in
                     VStack(alignment: .leading, spacing: 3) {
                         Text("\(entry.category.uppercased()) · \(entry.level.rawValue.uppercased())")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
-                        Text(entry.message)
-                            .font(.caption)
+                        Text(entry.message).font(.caption)
                     }
                 }
             }
@@ -160,19 +161,15 @@ struct DiagnosticsView: View {
                 Label("Export Diagnostic Log", systemImage: "square.and.arrow.up")
             }
 
-            Button("Clear Log", role: .destructive) {
-                log.clear()
-            }
+            Button("Clear Log", role: .destructive) { log.clear() }
         } header: {
             Text("Session log")
         } footer: {
-            Text("Export deliberately redacts most of the SSID and does not include the Wi-Fi password, cryptographic secrets, or route history.")
+            Text("Export redacts most of the SSID and excludes the Wi-Fi password, cryptographic session keys and route history.")
         }
     }
 }
 
 #Preview {
-    NavigationStack {
-        DiagnosticsView()
-    }
+    NavigationStack { DiagnosticsView() }
 }
