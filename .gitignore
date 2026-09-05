@@ -1,0 +1,23 @@
+# Xcode
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+*.xccheckout
+*.xcscmblueprint
+
+# SwiftPM
+.build/
+.swiftpm/
+
+# macOS
+.DS_Store
+
+# Local diagnostic exports / secrets
+DiagnosticsExports/
+*.pcap
+*.pcapng
+*.key
+*.pem
+*.p12
+Secrets.xcconfig

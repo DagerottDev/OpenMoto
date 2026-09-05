@@ -1,435 +1,472 @@
 # RideDash iOS + Motorcycle Dash Projection
 
-Complete hardware-in-the-loop implementation roadmap
+Complete hardware-in-the-loop implementation roadmap and current beta status.
 
 **Primary hardware test target:** Guerrilla 450 with Tripper-style TFT dash owned by the project tester.
 
-> Goal: Build a native iPhone app that can join a compatible motorcycle dash Wi-Fi network, establish a projection session, render navigation off-screen, encode frames as H.264, stream them over RTP/UDP, receive non-safety-critical dash input, and remain robust enough for real rides.
+> Goal: Build a native iPhone app that can join a compatible motorcycle dash Wi-Fi network, establish an authenticated projection session, render navigation off-screen, encode frames as H.264, stream them over RTP/UDP, receive non-safety-critical dash input, recover from connection loss, and remain robust enough for real rides.
 
-## 1. Product principles
+## 1. Current status
 
-1. Build bottom-up: connectivity before UI polish.
-2. Verify every protocol assumption against owned hardware and exact firmware.
-3. Keep protocol bytes and networking out of SwiftUI views.
-4. Keep safety-critical motorcycle control permanently out of scope.
-5. Use public iOS APIs only.
-6. Keep manufacturer branding/assets/keys out of the app unless separately authorized.
-7. Treat iOS lock-screen/background behavior as an early feasibility gate.
+RideDash is **code-complete for the planned first hardware beta**. No CI/CD pipeline is used. The remaining work is physical Xcode build/sign/install plus real-device and motorcycle-dash validation.
 
-## 2. Scope
+### Implemented in code
+
+- Native SwiftUI app targeting iOS 17+.
+- SwiftData local-first persistence.
+- Vehicles, Garage, Fuel, Expenses, Maintenance, Rides and Settings.
+- Manual and automatic ride recording during projection sessions.
+- Maintenance next-due km/date tracking and local notifications.
+- MapKit route search, route preview and Apple Maps hand-off.
+- CoreLocation live navigation state.
+- Off-route detection with cooldown-protected automatic rerouting.
+- Remaining distance, ETA, GPS quality and route recalculation state.
+- Share Extension and `ridedash://` route deep links.
+- User-approved compatible-display Wi-Fi join via `NEHotspotConfigurationManager`.
+- App-managed persistent Wi-Fi configuration.
+- Local-network monitoring with `NWPathMonitor`.
+- UDP control, input and video channels using Network.framework.
+- Configurable protocol host, broadcast address, control/input/video ports, FPS and bitrate.
+- K1G/TLV framing and rolling sequence handling.
+- Dynamic RSA modulus/exponent parsing from the display.
+- Fresh ephemeral AES-256 session key per authentication attempt.
+- RSA PKCS#1 v1.5 session authentication.
+- Auth timeout/rejection handling.
+- Bounded exponential automatic reconnect.
+- Navigation-mode restoration after reconnect.
+- Repeated UDP-send failure recovery.
+- Navigation/projection enter/exit sequencing.
+- Route-card, active-nav, status and projection-frame keep-alives.
+- VideoToolbox low-latency H.264 Baseline encoder.
+- SPS/PPS extraction.
+- RTP PT=96 packetization and FU-A fragmentation.
+- 526×300 off-screen renderer and calibration grid.
+- Known RIGHT / LEFT / DOWN / CLICK decoding and acknowledgements.
+- Input debounce for repeated handlebar events.
+- Stream/session metrics and sanitized diagnostics export.
+- Thermal state, battery state and Low Power Mode monitoring.
+- In-app deterministic K1G/RTP/FU-A self-check that generates no network traffic.
+- Privacy manifest and required-reason declaration for UserDefaults.
+- Independent interoperability NOTICE and permanent safety boundary.
+
+### Remaining validation only
+
+- Xcode compile/sign/install on the target iPhone.
+- Exact target-firmware IP/port confirmation.
+- Repeated authentication on the physical dash.
+- Navigation-mode transition validation.
+- Calibration grid visible on the physical dash.
+- H.264/RTP stability testing.
+- Physical LEFT / RIGHT / DOWN / CLICK validation.
+- Ignition-cycle reconnect validation.
+- iPhone lock/background behavior measurement.
+- 30/60/120-minute thermal, battery and network endurance testing.
+
+## 2. Product principles
+
+1. Verify every firmware-sensitive assumption against owned hardware.
+2. Keep protocol bytes and networking out of SwiftUI views.
+3. Keep safety-critical motorcycle control permanently out of scope.
+4. Use public iOS APIs only.
+5. Keep manufacturer branding/assets/private keys out of the app unless separately authorized.
+6. Never persist ephemeral authentication/session secrets.
+7. Treat lock-screen/background projection behavior as a hardware/iOS feasibility measurement, not an assumption.
+8. Do not use fake audio or other background-execution workarounds.
+
+## 3. Scope
 
 ### In scope
 
-- Native Swift/SwiftUI application, initially iOS 17+.
-- User-approved Wi-Fi joining with `NEHotspotConfigurationManager`.
-- Local-network state monitoring using `Network.framework`.
-- UDP control/diagnostic transport.
-- Typed protocol codec and session state machine.
-- Compatible session authentication based on lawful/public interoperability research.
-- H.264 encoding using VideoToolbox.
-- RTP/H.264 packetization and UDP projection.
-- 526×300 off-screen dash renderer as the initial reference viewport.
-- CoreLocation + MapKit navigation state.
+- Native Swift/SwiftUI application.
+- Compatible-display Wi-Fi joining and local-network monitoring.
+- UDP session transport.
+- K1G/TLV-compatible interoperability layer.
+- Session authentication using dynamically supplied public-key material.
+- H.264/RTP projection.
+- 526×300 reference viewport, runtime-tunable where needed.
+- CoreLocation + MapKit navigation.
+- Route deviation and rerouting.
 - Non-safety-critical dash button/joystick input.
-- Diagnostics, sanitized packet/session logs and hardware compatibility records.
-- Vehicle, garage, expenses, ride history and settings product features.
-- Share Extension for route hand-off from map apps.
+- Automatic reconnect/session restoration.
+- Vehicles, garage, expenses, fuel, maintenance, rides and reminders.
+- Share Extension for route hand-off.
+- Diagnostics, telemetry and compatibility records.
 
 ### Explicitly out of scope
 
-- ECU, throttle, ABS, traction control, brakes, immobilizer, engine commands, or other safety-critical vehicle control.
-- Firmware modification, secure-boot bypass, firmware-signing bypass, or exploitation.
-- Extraction/redistribution of private manufacturer keys, certificates, proprietary assets or confidential material.
-- Any design that hides required speed/fuel/warning information.
-- Fake audio or other policy-violating background-execution tricks.
+- ECU, throttle, ABS, traction control, brakes, immobilizer, engine commands or other safety-critical vehicle control.
+- Firmware modification, secure-boot bypass, firmware-signing bypass or exploitation.
+- Extraction or redistribution of manufacturer private keys/certificates/confidential assets.
+- Any feature that suppresses required speed/fuel/warning information.
+- Policy-violating background execution techniques.
 
-## 3. Definition of done
+## 4. Definition of done
 
-| Area | Acceptance criterion |
-|---|---|
-| Connectivity | Cold-start app can guide user to join the dash AP and establish a valid local-network path. |
-| Transport | UDP channels open reliably and datagrams can be logged without UI coupling. |
-| Authentication | Session handshake succeeds repeatedly without replaying another device's secrets. |
-| Projection control | Dash enters/leaves projection mode cleanly. |
-| Video | A stable iPhone-generated H.264 calibration stream displays for at least 30 minutes. |
-| Input | Known non-safety-critical button events are decoded and mapped to app actions. |
-| Navigation | Live route state is projected with position, maneuver, ETA and remaining distance. |
-| Recovery | Wi-Fi loss, ignition cycle and session interruption recover cleanly. |
-| Thermals | 60-minute ride has acceptable battery/thermal behavior. |
-| Background | Supported screen-lock/background behavior is measured and documented per iOS/device. |
-| Safety | No safety-critical vehicle command path exists. |
+| Area | Acceptance criterion | Code status | Hardware status |
+|---|---|---|---|
+| Connectivity | App joins the compatible display AP and sees a valid local-network path. | ✅ | ⏳ |
+| Transport | UDP control/input/video channels operate reliably. | ✅ | ⏳ |
+| Authentication | Session handshake succeeds repeatedly without replayed secrets. | ✅ implementation | ⏳ |
+| Projection control | Display enters/leaves navigation/projection mode cleanly. | ✅ implementation | ⏳ |
+| Video | Stable iPhone-generated H.264 calibration stream for ≥30 min. | ✅ implementation | ⏳ |
+| Input | Known button events decode, debounce and acknowledge correctly. | ✅ implementation | ⏳ |
+| Navigation | Live route, maneuver, ETA, remaining distance and reroute state project correctly. | ✅ | ⏳ road test |
+| Recovery | Connection/session loss triggers bounded reconnect and navigation restoration. | ✅ | ⏳ ignition test |
+| Product | Vehicles/garage/expenses/fuel/rides/reminders operate locally. | ✅ | ⏳ device smoke test |
+| Thermals | 60-minute ride remains stable with acceptable battery/thermal behavior. | ✅ telemetry | ⏳ |
+| Background | Lock/background behavior is measured and documented per device/iOS. | ✅ location support | ⏳ |
+| Safety | No safety-critical control path exists. | ✅ | ✅ design boundary |
 
-## 4. Architecture
+## 5. Current architecture
 
 ```text
 RideDashApp
-├── App / SwiftUI
-│   ├── Pairing
-│   ├── Diagnostics
+├── App
+│   ├── RideDashApp
+│   ├── RootView
+│   └── DashSessionCoordinator
+├── Features
+│   ├── Dashboard
 │   ├── Navigation
-│   ├── Projection
-│   ├── Vehicles / Garage / Expenses / Rides
-│   └── Developer Tools
+│   ├── Display Connection / Projection
+│   ├── Diagnostics
+│   ├── Vehicles
+│   ├── Garage / Maintenance / Fuel
+│   ├── Expenses
+│   ├── Rides
+│   └── Settings
 ├── DashConnectivity
 │   ├── TripperWiFiManager
 │   ├── LocalNetworkMonitor
-│   ├── DashEndpointResolver
 │   └── DashTransport
 ├── DashProtocol
-│   ├── K1GCodec
-│   ├── TLVCodec
-│   ├── DashAuthenticator
-│   ├── DashSessionStateMachine
-│   └── DashInputDecoder
+│   └── DashProtocol.swift
+│       ├── HexCodec
+│       ├── K1GCodec
+│       ├── DashEventDecoder
+│       ├── DashAuthenticator
+│       └── DashButton mapping
 ├── ProjectionCore
-│   ├── FrameRenderer
-│   ├── H264Encoder
-│   ├── NALUnitParser
-│   ├── RTPPacketizer
-│   └── ProjectionStreamer
+│   └── ProjectionCore.swift
+│       ├── DashFrameRenderer
+│       ├── H264Encoder
+│       ├── H264NALUnit
+│       ├── H264RTPPacketizer
+│       └── ProjectionStreamer
 ├── NavigationCore
-│   ├── RouteService
-│   ├── NavigationState
-│   ├── ManeuverMapper
-│   └── OfflineRouteCache (later)
+│   └── NavigationCore.swift
+│       ├── NavigationLocationService
+│       ├── RouteResolver
+│       └── NavigationViewModel
 ├── Diagnostics
 │   ├── DiagnosticLog
-│   ├── PacketTrace
-│   ├── SessionTimeline
-│   └── Metrics
-└── Persistence / Tests
-    ├── SwiftData
-    ├── Protocol fixtures
-    ├── Golden packet tests
-    └── Hardware compatibility matrix
+│   ├── DeviceHealthMonitor
+│   └── deterministic protocol/RTP self-check
+├── SwiftData models
+│   ├── Vehicle
+│   ├── Expense
+│   ├── FuelLog
+│   ├── MaintenanceRecord
+│   └── RideRecord
+└── RideDashShare
+    └── URL/text Share Extension
 ```
 
-## 5. Core boundaries
+## 6. Session lifecycle
 
-```swift
-protocol DashWiFiJoining {
-    func join(ssid: String, passphrase: String) async throws
-    func removeConfiguration(forSSID ssid: String) async
-}
-
-protocol DashDatagramTransport {
-    func start() async throws
-    func stop()
-    func send(_ data: Data, to port: UInt16) async throws
-    var incomingPackets: AsyncStream<DashDatagram> { get }
-}
-
-protocol DashAuthenticating {
-    func authenticate(session: DashSessionContext) async throws -> AuthenticatedSession
-}
-
-protocol FrameRendering {
-    var size: CGSize { get }
-    func render(_ state: ProjectionUIState) throws -> CVPixelBuffer
-}
-
-protocol VideoEncoding {
-    func encode(_ pixelBuffer: CVPixelBuffer, pts: CMTime) throws -> [H264NALUnit]
-}
-
-protocol RTPPacketizing {
-    func packetize(_ nalUnits: [H264NALUnit], timestamp: UInt32) -> [Data]
-}
+```text
+Disconnected
+   ↓
+Wi-Fi joined
+   ↓
+UDP transport ready
+   ↓
+Initial K1G burst
+   ↓
+RSA modulus + exponent received
+   ↓
+Generate fresh AES-256 key
+   ↓
+RSA PKCS#1 v1.5 encrypted session payload
+   ↓
+Authenticated
+   ↓
+Navigation-mode control sequence
+   ↓
+Route/nav/status keep-alives
+   ↓
+H.264 renderer → encoder → RTP → UDP
+   ↓
+Projecting
 ```
 
-## 6. Phase plan
+Failure handling:
 
-### Phase 0 — Baseline & hardware inventory
+```text
+Transport/Auth/Repeated-send failure
+   ↓
+Bounded exponential reconnect
+1s → 2s → 4s → 8s → 16s
+   ↓
+Re-authenticate
+   ↓
+Restore navigation mode when applicable
+```
 
-- Record bike model, dash firmware, SSID format, iPhone model and iOS version.
-- Verify iPhone can manually join the dash Wi-Fi.
-- Create `DashTestProfile` so every exported test log contains hardware/firmware metadata.
-- Record official-app behavior only on hardware/accounts the tester owns or is authorized to test.
+Manual Disconnect always cancels automatic reconnect.
 
-**Gate:** Exact firmware/device metadata captured and manual Wi-Fi join succeeds.
+## 7. Protocol / projection defaults to validate
 
-### Phase 1 — iOS Wi-Fi join & local-network diagnostics
+These are **research defaults**, not guaranteed firmware constants:
 
-- Add Hotspot Configuration capability.
-- Implement `TripperWiFiManager` using `NEHotspotConfigurationManager`.
-- Add pairing UI for SSID/passphrase and explicit user consent.
-- Implement `LocalNetworkMonitor` with `NWPathMonitor`.
-- Add configurable dash host (initial hypothesis `192.168.1.1`).
-- Add a non-destructive route/socket readiness check.
-- Add structured diagnostic timeline and export.
+| Setting | Current default |
+|---|---:|
+| Display host | `192.168.1.1` |
+| Broadcast/control host | `192.168.1.255` |
+| Control UDP | `2000` |
+| Input UDP | `2002` |
+| Video RTP UDP | `5000` |
+| Viewport | `526×300` |
+| Initial FPS | `4` |
+| Initial bitrate | `250 kbps` |
+| RTP payload type | `96` |
 
-**Gate:** App can request the dash network, observe a viable local path and initialize the diagnostic network stack on the physical iPhone.
+All firmware-sensitive network values remain configurable in the app.
 
-### Phase 2 — UDP transport & packet diagnostics
+## 8. Navigation implementation
 
-- Implement `DashTransport` with Network.framework UDP.
-- Support multiple protocol ports and independent receive paths.
-- Hex/structured packet logging with timestamp, direction, endpoint and byte count.
-- Sanitized session trace export.
-- Deterministic fixture replay for tests.
+Implemented navigation behavior:
 
-**Gate:** Bidirectional datagrams can be observed/reproduced without SwiftUI depending on raw protocol bytes.
+- Destination text, coordinates or shared URL input.
+- `MKLocalSearch` resolution.
+- `MKDirections` automobile routing.
+- Current location and heading tracking.
+- Active maneuver/step tracking.
+- ETA and remaining-distance updates.
+- GPS degraded-state reporting.
+- Off-route distance measurement against route polyline.
+- Cooldown-protected route recalculation to avoid reroute loops.
+- Recalculation count available for diagnostics.
+- Handlebar input can move through projected navigation state without touching vehicle systems.
 
-### Phase 3 — protocol codec & session state machine
+## 9. Product features
 
-- Typed K1G/TLV framing.
-- Decode known auth/control/input families.
-- State machine: disconnected → Wi-Fi joined → transport ready → authenticating → authenticated → nav-ready → projecting.
-- Strict malformed-length/type handling.
-- Golden packet tests.
+### Vehicles
 
-**Gate:** Reference/captured packets decode into typed events and transitions are unit-tested.
+- Multiple vehicle profiles.
+- Active vehicle selection.
+- Registration and odometer.
+- Insurance expiry.
+- PUC expiry.
+- Last-service date.
 
-### Phase 4 — session authentication
+### Garage / maintenance
 
-- Parse public-key material exposed by the session handshake where applicable.
-- Generate ephemeral session material locally.
-- Isolate cryptographic/padding details behind `DashAuthenticator`.
-- Explicit auth timeout/retry/failure states.
-- Never persist ephemeral secrets.
+- Fuel logs.
+- Full-tank mileage calculation.
+- Maintenance records.
+- Next-due odometer.
+- Next-due date.
+- Local due-date notifications.
 
-**Gate:** Ten consecutive cold authentication attempts succeed on the target dash.
+### Expenses
 
-### Phase 5 — projection control plane
+- Fuel/service/repair/accessory/gear/food/stay/transport/other categories.
+- Local persistence.
+- Currency preferences.
+- CSV export.
 
-- Projection-on/off sequencing.
-- Required navigation/session metadata.
-- Keep-alive/tick handling.
-- Firmware capability flags instead of global assumptions.
-- Best-effort projection-off cleanup on user stop/disconnect paths.
+### Rides
 
-**Gate:** Dash transitions between normal and projection/navigation modes repeatedly without video.
+- Manual ride entries.
+- Automatic ride session around projection usage.
+- GPS distance accumulation.
+- Start/end timestamps.
+- Destination association.
 
-### Phase 6 — H.264 encoder proof
+## 10. Diagnostics and privacy
 
-- Create a 526×300 `CVPixelBuffer` target.
-- Low-latency `VTCompressionSession`.
-- Start around 4 fps and ~200–250 kbps; keep profile runtime-tunable.
-- Extract SPS/PPS and NAL units.
-- Local encoder harness before bike transmission.
+Diagnostics include:
 
-**Gate:** Stable H.264 elementary stream at target dimensions.
+- Wi-Fi join/remove events.
+- Network path and interface state.
+- Session state transitions.
+- UDP RX/TX counts.
+- Sanitized packet prefixes.
+- Authentication/reconnect events.
+- Encoder/RTP counters.
+- Route recalculation state.
+- Thermal state.
+- Battery level/state.
+- Low Power Mode.
 
-### Phase 7 — RTP/H.264 & first pixels
+The deterministic self-check validates K1G sequencing and RTP/FU-A behavior **without opening a network connection**.
 
-- RTP sequence/timestamps.
-- Single-NAL packets and FU-A fragmentation.
-- Send to firmware-validated video endpoint (public references use UDP/5000 as an initial hypothesis).
-- First render calibration grid/animation, not maps.
-- Capture packets/sec, bitrate, sequence gaps and encode latency.
+Diagnostic export excludes by default:
 
-**Gate:** Physical dash displays iPhone-generated calibration pixels reliably.
+- Wi-Fi passwords.
+- AES session keys.
+- RSA/private key material.
+- Detailed route/location history.
 
-### Phase 8 — dash-safe renderer
+Release hygiene currently includes:
 
-- Exact target render size.
-- Circular-safe-area calibration screen.
-- Large glanceable typography/icons/cards/route geometry.
-- Same renderer for local preview and projection.
-- Snapshot tests.
+- Privacy manifest.
+- UserDefaults required-reason declaration (`CA92.1`).
+- Local Network permission copy.
+- Location permission copy.
+- Hotspot Configuration entitlement.
+- Independent interoperability NOTICE.
 
-**Gate:** UI is readable on the actual dash, not merely in Simulator.
+## 11. Recovery behavior
 
-### Phase 9 — navigation engine
+Implemented recovery paths:
 
-- CoreLocation live position/heading.
-- MapKit route generation initially.
-- `NavigationState` independent of MapKit UI.
-- Maneuver, distance-to-turn, ETA, remaining distance and route progress.
-- Route deviation/recalculation and degraded-GPS state.
+- Authentication timeout.
+- Authentication rejection limit.
+- Transport failure detection.
+- Repeated control-send failure detection.
+- Bounded exponential reconnect.
+- Re-authentication after reconnect.
+- Navigation-mode restoration.
+- User-visible reconnect attempt/reason.
+- Input-event debounce.
+- Manual stop/disconnect cancellation.
 
-**Gate:** On-road projected instructions track the route correctly.
+Still to verify physically:
 
-### Phase 10 — dash input
+- AP disappearance when ignition turns off.
+- Rejoin timing after ignition turns on.
+- Whether the display requires extra firmware-specific restart packets.
+- Whether H.264 projection itself must be manually restarted after a recovered session.
 
-- Listen on firmware-validated input channel (public references use UDP/2002 as an initial hypothesis).
-- Decode known LEFT/RIGHT/DOWN/CLICK-style events into semantic `DashInputAction` values.
-- Ack where required.
-- Debounce repeats and log unknown codes.
-- Restrict actions to infotainment/navigation UI.
+## 12. Hardware validation plan
 
-**Gate:** Known buttons reliably drive projected UI.
+Run tests in this order. Do not jump directly to video on the first session.
 
-### Phase 11 — recovery & ignition cycles
+### Stage A — Xcode/device baseline
 
-- Detect AP loss, socket failure and session expiry.
-- Bounded reconnect with visible state.
-- Handle ignition off/on and phone Wi-Fi changes.
-- Persist compatibility metadata only, not session secrets.
+1. Open `RideDash.xcodeproj`.
+2. Select the developer team for RideDash and RideDashShare.
+3. Compile/sign/install on the physical iPhone.
+4. Fix any Xcode/compiler/signing issues found by the real SDK.
+5. Open Diagnostics and run the local deterministic self-check.
 
-**Gate:** Repeated ignition cycles recover without reinstall/re-pair.
-
-### Phase 12 — lock-screen/background feasibility
-
-- Test foreground, inactive, dim screen and locked device.
-- Measure networking/encoding duration after lock on physical hardware.
-- No fake audio/background tricks.
-- If full lock streaming is not viable, define a supported foreground/low-brightness operating mode.
-
-**Gate:** Supported operating mode is reproducible and documented by iPhone/iOS version.
-
-### Phase 13 — thermal/battery/network tuning
-
-- 30/60/120-minute tests.
-- Measure thermal state and battery drain.
-- Cache static frames/regions.
-- Tune 4/8/12 fps profiles and bitrate.
-- Correlate freezes/blinks/latency with network and encoder metrics.
-
-**Gate:** 60-minute ride completes without sustained thermal warning or projection instability.
-
-### Phase 14 — product integration
-
-- Vehicles, Garage, Expenses, Ride History, Settings.
-- Connect/Start Projection product flows.
-- Apple Maps/Google Maps Share Extension.
-- Ride logging around projection session.
-- Maintenance notifications as a separate product module.
-
-**Gate:** Product feels cohesive rather than a protocol demo.
-
-### Phase 15 — compatibility & release hardening
-
-- Firmware/device capability records.
-- Unit tests, renderer tests and hardware smoke checklist.
-- Privacy manifest/permission text.
-- License/NOTICE and trademark review.
-- Distribution decision only after policy/legal/stability review.
-
-**Gate:** Tagged beta with reproducible hardware results and no safety-critical coupling.
-
-## 7. First hardware session
-
-The first bike session intentionally stops before authentication/video.
+### Stage B — network
 
 1. Record dash firmware and iPhone/iOS version.
-2. Enable the dash Wi-Fi/AP using the bike's normal user flow.
-3. Record the displayed SSID; do not assume another bike's SSID.
-4. Join manually in iOS Settings once.
-5. Launch RideDash and grant Local Network permission when prompted.
-6. Use the Diagnostics screen to request the Wi-Fi join configuration.
-7. Observe path/interface changes.
-8. Initialize the UDP diagnostic stack only after the bike is stationary.
-9. Record state transitions/errors.
-10. Power-cycle the bike and repeat three times.
-11. Export a sanitized diagnostic log.
+2. Enable the display Wi-Fi/AP through the normal motorcycle UI.
+3. Record the SSID.
+4. Confirm manual iOS join once.
+5. Use RideDash to join the compatible display Wi-Fi.
+6. Confirm `NWPath` reports Wi-Fi/local networking.
+7. Confirm control transport can become ready.
 
-## 8. Hardware test matrix
+### Stage C — authentication
+
+1. Press **Connect + Authenticate**.
+2. Confirm modulus and exponent arrive.
+3. Confirm session-key packet is sent.
+4. Confirm authentication accepted.
+5. Repeat across at least three cold ignition cycles; target eventually 10/10.
+
+### Stage D — navigation control plane
+
+1. Enter navigation mode without starting H.264.
+2. Confirm display changes to the expected navigation/projection state.
+3. Verify keep-alive stability.
+4. Stop and confirm clean return.
+
+### Stage E — first pixels
+
+1. Enable calibration grid.
+2. Start H.264/RTP projection at 526×300, 4 fps, 250 kbps.
+3. Confirm framing and orientation.
+4. Run for 30 minutes.
+5. Adjust packet size/FPS/bitrate only if hardware requires it.
+
+### Stage F — controls
+
+Verify:
+
+- LEFT
+- RIGHT
+- DOWN
+- CLICK
+- acknowledgements
+- debounce behavior
+
+### Stage G — recovery/background/endurance
+
+- Ignition off/on reconnect.
+- Wi-Fi interruption.
+- Screen dim/inactive.
+- Phone locked.
+- 30-minute session.
+- 60-minute session.
+- Optional 120-minute endurance session.
+- Observe thermal and battery telemetry.
+
+## 13. Hardware test matrix
 
 | Test | Pass condition | Result |
 |---|---|---|
+| Xcode build/install | App launches on target iPhone | |
+| Local self-check | K1G/RTP/FU-A checks pass | |
 | Manual Wi-Fi join | iPhone joins expected local subnet | |
 | In-app join | User-approved join succeeds | |
-| Local Network permission | App can initialize local networking | |
+| Local Network permission | App initializes local networking | |
 | UDP transport | Socket state reaches ready | |
-| Dash datagram | At least one expected dash-originated datagram is captured once Phase 2 probes are defined | |
-| Authentication | 10/10 cold attempts | |
-| Enter projection | Dash transitions to navigation/projection | |
-| Projection off | Dash returns cleanly | |
-| Calibration grid | Correctly framed on physical dash | |
+| Authentication | Repeated cold attempts succeed | |
+| Enter navigation | Physical display transitions correctly | |
+| Projection off | Physical display returns cleanly | |
+| Calibration grid | Correct framing/orientation | |
 | 4 fps | 30 min stable | |
 | 8 fps | Stable or documented unsupported | |
 | 12 fps | Stable or documented unsupported | |
-| Dash buttons | Known navigation inputs decoded | |
-| Ignition cycle | Reconnect succeeds | |
+| Dash buttons | Known navigation inputs decoded/acked | |
+| Ignition cycle | Automatic reconnect succeeds | |
+| Reconnect restore | Navigation mode returns automatically | |
 | Phone lock | Behavior measured/documented | |
 | 60-minute ride | Thermal/battery/network acceptable | |
 
-## 9. Diagnostics requirements
+## 14. Release decision
 
-Before UI polish, log:
+Do not treat the current branch as production-ready until hardware validation is complete.
 
-- Wi-Fi request/join/remove events.
-- `NWPath` status and active interfaces.
-- Transport state transitions.
-- Packet timestamp, direction, endpoint and byte count.
-- Sanitized hex prefix for protocol debugging.
-- Session-state transitions.
-- Encoder FPS, bytes/sec, keyframes and latency.
-- RTP sequence/packets/sec/fragmentation/send errors.
-- Thermal state and battery level/state.
-- GPS accuracy/heading accuracy/recalculation count.
+Before public distribution:
 
-Diagnostic export must exclude private keys and detailed location history by default.
+- Complete physical compatibility testing.
+- Document supported dash firmware/device combinations.
+- Confirm background operating mode.
+- Perform App Store/privacy review.
+- Perform trademark/IP/interoperability review.
+- Keep public branding generic unless explicit authorization exists.
+- Retain the permanent safety boundary.
 
-## 10. Suggested repository structure
+## 15. Current repository workflow
 
-```text
-RideDash/
-├── RideDash.xcodeproj/
-├── RideDash/
-│   ├── App/
-│   ├── Features/
-│   │   ├── Pairing/
-│   │   ├── Diagnostics/
-│   │   ├── Projection/
-│   │   ├── Navigation/
-│   │   ├── Vehicles/
-│   │   ├── Garage/
-│   │   ├── Expenses/
-│   │   └── Rides/
-│   ├── DashConnectivity/
-│   ├── DashProtocol/
-│   ├── ProjectionCore/
-│   ├── NavigationCore/
-│   ├── Diagnostics/
-│   ├── Models/
-│   ├── Services/
-│   └── Resources/
-├── RideDashTests/
-├── Docs/
-│   ├── PROJECT_PLAN.md
-│   ├── HARDWARE_TEST_MATRIX.md
-│   ├── PROTOCOL_NOTES.md
-│   └── SAFETY_SCOPE.md
-└── NOTICE
-```
+- Implementation branch: `phase-1-connectivity-diagnostics`
+- Draft PR: RideDash iOS complete first hardware-beta implementation
+- CI/CD: intentionally not used
+- Validation: manual Xcode + physical iPhone + owned motorcycle dash
 
-## 11. Build order
+Supporting documents:
 
-1. Wi-Fi join
-2. Local-network monitor
-3. UDP transport
-4. Packet logger
-5. Protocol codec
-6. Authentication
-7. Projection control plane
-8. H.264 encoder
-9. RTP packetizer
-10. Calibration stream on physical dash
-11. Renderer
-12. Live navigation
-13. Dash input
-14. Session recovery
-15. Lock/background feasibility
-16. Thermal/battery tuning
-17. Product integration
-18. Compatibility/beta hardening
+- `Docs/IMPLEMENTATION_STATUS.md` — exact code-completion checklist.
+- `Docs/MANUAL_TEST_GUIDE.md` — step-by-step device/bike validation procedure.
+- `Docs/HARDWARE_TEST_MATRIX.md` — test result record.
+- `Docs/PROTOCOL_NOTES.md` — interoperability research notes.
+- `Docs/SAFETY_SCOPE.md` — permanent safety exclusions.
 
-## 12. Phase 1 acceptance checklist
+## 16. Immediate next action
 
-- [ ] Project builds on a physical iPhone.
-- [ ] Diagnostics screen displays current `DashTestProfile`.
-- [ ] User can request joining an entered dash SSID/passphrase.
-- [ ] Native iOS approval/error is surfaced clearly.
-- [ ] App reports current `NWPath` status/interfaces.
-- [ ] Configurable dash host defaults to the current research hypothesis but is editable.
-- [ ] UDP diagnostic connection can be initialized/stopped without crash.
-- [ ] Structured state transitions appear in the diagnostic log.
-- [ ] Diagnostic log can be exported through the share sheet.
-- [ ] Three bike power-cycle attempts are recorded.
-- [ ] Authentication/projection/video remains disabled until Phase 1 hardware gate passes.
+The next step is no longer additional feature coding. It is:
 
-## 13. Immediate next test information needed
+1. Build/sign/install the branch on the physical iPhone.
+2. Run the local self-check.
+3. Connect to the compatible dash Wi-Fi.
+4. Stop after the first successful authentication attempt and export the sanitized diagnostic log.
+5. Use that hardware result to tune only firmware-specific values if needed.
 
-To close Phase 0 and validate Phase 1 on the physical bike, record:
-
-- Dash firmware version
-- Dash Wi-Fi SSID shown by the bike
-- Whether the AP requires a password, and how the user obtains it
-- iPhone model
-- iOS version
-- Whether manual iPhone join succeeds
-- IP/subnet observed after manual join, if visible
-
-Do **not** commit real Wi-Fi credentials or private device/session secrets to the repository.
+Do **not** commit real Wi-Fi credentials, authentication/session keys, private device secrets or precise personal route history to the repository.

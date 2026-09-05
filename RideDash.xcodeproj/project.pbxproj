@@ -1,0 +1,514 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		000000000000000000000201 /* RideDashApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000101 /* RideDashApp.swift */; };
+		000000000000000000000202 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000102 /* RootView.swift */; };
+		000000000000000000000203 /* DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000103 /* DiagnosticsView.swift */; };
+		000000000000000000000204 /* TripperWiFiManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000104 /* TripperWiFiManager.swift */; };
+		000000000000000000000205 /* LocalNetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000105 /* LocalNetworkMonitor.swift */; };
+		000000000000000000000206 /* DashTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000106 /* DashTransport.swift */; };
+		000000000000000000000207 /* DiagnosticLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000107 /* DiagnosticLog.swift */; };
+		000000000000000000000208 /* DashTestProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000108 /* DashTestProfile.swift */; };
+		000000000000000000000209 /* DashSessionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000110 /* DashSessionCoordinator.swift */; };
+		000000000000000000000210 /* DashProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000111 /* DashProtocol.swift */; };
+		000000000000000000000211 /* ProjectionCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000112 /* ProjectionCore.swift */; };
+		000000000000000000000212 /* NavigationCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000113 /* NavigationCore.swift */; };
+		000000000000000000000213 /* ProductFeatures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000114 /* ProductFeatures.swift */; };
+		000000000000000000000214 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000116 /* ShareViewController.swift */; };
+		000000000000000000000215 /* RideDashShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 000000000000000000000004 /* RideDashShare.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		000000000000000000000216 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000118 /* PrivacyInfo.xcprivacy */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		000000000000000000000601 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 000000000000000000000005;
+			remoteInfo = RideDashShare;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		000000000000000000000304 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				000000000000000000000215 /* RideDashShare.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		000000000000000000000003 /* RideDash.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RideDash.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000004 /* RideDashShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RideDashShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000101 /* RideDashApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideDashApp.swift; sourceTree = "<group>"; };
+		000000000000000000000102 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		000000000000000000000103 /* DiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsView.swift; sourceTree = "<group>"; };
+		000000000000000000000104 /* TripperWiFiManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripperWiFiManager.swift; sourceTree = "<group>"; };
+		000000000000000000000105 /* LocalNetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNetworkMonitor.swift; sourceTree = "<group>"; };
+		000000000000000000000106 /* DashTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashTransport.swift; sourceTree = "<group>"; };
+		000000000000000000000107 /* DiagnosticLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticLog.swift; sourceTree = "<group>"; };
+		000000000000000000000108 /* DashTestProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashTestProfile.swift; sourceTree = "<group>"; };
+		000000000000000000000109 /* RideDash.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RideDash.entitlements; sourceTree = "<group>"; };
+		000000000000000000000110 /* DashSessionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashSessionCoordinator.swift; sourceTree = "<group>"; };
+		000000000000000000000111 /* DashProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashProtocol.swift; sourceTree = "<group>"; };
+		000000000000000000000112 /* ProjectionCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectionCore.swift; sourceTree = "<group>"; };
+		000000000000000000000113 /* NavigationCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationCore.swift; sourceTree = "<group>"; };
+		000000000000000000000114 /* ProductFeatures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductFeatures.swift; sourceTree = "<group>"; };
+		000000000000000000000115 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		000000000000000000000116 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		000000000000000000000117 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		000000000000000000000118 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		000000000000000000000302 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000312 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		000000000000000000000010 = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000011 /* RideDash */,
+				000000000000000000000023 /* RideDashShare */,
+				000000000000000000000017 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		000000000000000000000011 /* RideDash */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000012 /* App */,
+				000000000000000000000013 /* Features */,
+				000000000000000000000014 /* DashConnectivity */,
+				000000000000000000000020 /* DashProtocol */,
+				000000000000000000000021 /* ProjectionCore */,
+				000000000000000000000022 /* NavigationCore */,
+				000000000000000000000015 /* Diagnostics */,
+				000000000000000000000016 /* Models */,
+				000000000000000000000115 /* Info.plist */,
+				000000000000000000000109 /* RideDash.entitlements */,
+				000000000000000000000118 /* PrivacyInfo.xcprivacy */,
+			);
+			path = RideDash;
+			sourceTree = "<group>";
+		};
+		000000000000000000000012 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000101 /* RideDashApp.swift */,
+				000000000000000000000102 /* RootView.swift */,
+				000000000000000000000110 /* DashSessionCoordinator.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		000000000000000000000013 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000018 /* Diagnostics */,
+				000000000000000000000019 /* Product */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		000000000000000000000018 /* Diagnostics */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000103 /* DiagnosticsView.swift */,
+			);
+			path = Diagnostics;
+			sourceTree = "<group>";
+		};
+		000000000000000000000019 /* Product */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000114 /* ProductFeatures.swift */,
+			);
+			path = Product;
+			sourceTree = "<group>";
+		};
+		000000000000000000000014 /* DashConnectivity */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000104 /* TripperWiFiManager.swift */,
+				000000000000000000000105 /* LocalNetworkMonitor.swift */,
+				000000000000000000000106 /* DashTransport.swift */,
+			);
+			path = DashConnectivity;
+			sourceTree = "<group>";
+		};
+		000000000000000000000020 /* DashProtocol */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000111 /* DashProtocol.swift */,
+			);
+			path = DashProtocol;
+			sourceTree = "<group>";
+		};
+		000000000000000000000021 /* ProjectionCore */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000112 /* ProjectionCore.swift */,
+			);
+			path = ProjectionCore;
+			sourceTree = "<group>";
+		};
+		000000000000000000000022 /* NavigationCore */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000113 /* NavigationCore.swift */,
+			);
+			path = NavigationCore;
+			sourceTree = "<group>";
+		};
+		000000000000000000000015 /* Diagnostics */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000107 /* DiagnosticLog.swift */,
+			);
+			path = Diagnostics;
+			sourceTree = "<group>";
+		};
+		000000000000000000000016 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000108 /* DashTestProfile.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		000000000000000000000023 /* RideDashShare */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000116 /* ShareViewController.swift */,
+				000000000000000000000117 /* Info.plist */,
+			);
+			path = RideDashShare;
+			sourceTree = "<group>";
+		};
+		000000000000000000000017 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000003 /* RideDash.app */,
+				000000000000000000000004 /* RideDashShare.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		000000000000000000000002 /* RideDash */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000402 /* Build configuration list for PBXNativeTarget "RideDash" */;
+			buildPhases = (
+				000000000000000000000301 /* Sources */,
+				000000000000000000000302 /* Frameworks */,
+				000000000000000000000303 /* Resources */,
+				000000000000000000000304 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				000000000000000000000602 /* PBXTargetDependency */,
+			);
+			name = RideDash;
+			productName = RideDash;
+			productReference = 000000000000000000000003 /* RideDash.app */;
+			productType = "com.apple.product-type.application";
+		};
+		000000000000000000000005 /* RideDashShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000403 /* Build configuration list for PBXNativeTarget "RideDashShare" */;
+			buildPhases = (
+				000000000000000000000311 /* Sources */,
+				000000000000000000000312 /* Frameworks */,
+				000000000000000000000313 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RideDashShare;
+			productName = RideDashShare;
+			productReference = 000000000000000000000004 /* RideDashShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		000000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					000000000000000000000002 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					000000000000000000000005 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = 000000000000000000000401 /* Build configuration list for PBXProject "RideDash" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 000000000000000000000010;
+			productRefGroup = 000000000000000000000017 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				000000000000000000000002 /* RideDash */,
+				000000000000000000000005 /* RideDashShare */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		000000000000000000000303 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000216 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000313 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		000000000000000000000301 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000201 /* RideDashApp.swift in Sources */,
+				000000000000000000000202 /* RootView.swift in Sources */,
+				000000000000000000000203 /* DiagnosticsView.swift in Sources */,
+				000000000000000000000204 /* TripperWiFiManager.swift in Sources */,
+				000000000000000000000205 /* LocalNetworkMonitor.swift in Sources */,
+				000000000000000000000206 /* DashTransport.swift in Sources */,
+				000000000000000000000207 /* DiagnosticLog.swift in Sources */,
+				000000000000000000000208 /* DashTestProfile.swift in Sources */,
+				000000000000000000000209 /* DashSessionCoordinator.swift in Sources */,
+				000000000000000000000210 /* DashProtocol.swift in Sources */,
+				000000000000000000000211 /* ProjectionCore.swift in Sources */,
+				000000000000000000000212 /* NavigationCore.swift in Sources */,
+				000000000000000000000213 /* ProductFeatures.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000000000311 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000214 /* ShareViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		000000000000000000000602 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 000000000000000000000005 /* RideDashShare */;
+			targetProxy = 000000000000000000000601 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		000000000000000000000501 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		000000000000000000000502 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		000000000000000000000503 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = RideDash/RideDash.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = RideDash/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.dagerott.RideDash;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		000000000000000000000504 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = RideDash/RideDash.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = RideDash/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.dagerott.RideDash;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		000000000000000000000505 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = RideDashShare/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.dagerott.RideDash.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		000000000000000000000506 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = RideDashShare/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.dagerott.RideDash.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		000000000000000000000401 /* Build configuration list for PBXProject "RideDash" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000501 /* Debug */,
+				000000000000000000000502 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000402 /* Build configuration list for PBXNativeTarget "RideDash" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000503 /* Debug */,
+				000000000000000000000504 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000403 /* Build configuration list for PBXNativeTarget "RideDashShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000505 /* Debug */,
+				000000000000000000000506 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 000000000000000000000001 /* Project object */;
+}
