@@ -38,7 +38,7 @@ body:
       label: Did normal display information recover after stopping?
       options:
         - Not applicable — app-only test
-        - Yes
+        - "Yes"
         - No — stopped testing
         - Not tested
     validations:
