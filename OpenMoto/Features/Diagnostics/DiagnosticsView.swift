@@ -204,8 +204,8 @@ struct DiagnosticsView: View {
 
             ShareLink(
                 item: log.exportText(profile: profile),
-                subject: Text("RideDash diagnostic log"),
-                message: Text("Sanitized RideDash hardware test log")
+                subject: Text("OpenMoto diagnostic log"),
+                message: Text("Sanitized OpenMoto hardware test log")
             ) {
                 Label("Export Diagnostic Log", systemImage: "square.and.arrow.up")
             }
@@ -300,7 +300,7 @@ enum ProtocolSelfCheck {
                 return .init(passed: false, summary: "Rolling sequence patch did not update the K1G sequence byte")
             }
 
-            let route = try K1GCodec.routeCard(title: "RideDash Self Check", projectionOn: true)
+            let route = try K1GCodec.routeCard(title: "OpenMoto Self Check", projectionOn: true)
             guard K1GCodec.decode(route) != nil else {
                 return .init(passed: false, summary: "Generated route card did not decode")
             }

@@ -1,4 +1,4 @@
-# RideDash Manual Hardware Test Guide
+# OpenMoto Manual Hardware Test Guide
 
 This is the required validation path for the first physical iPhone + motorcycle-display beta. There is intentionally **no CI/CD pipeline** for this project. Do not skip directly to projection: each stage proves a narrower dependency and makes failures diagnosable.
 
@@ -7,7 +7,7 @@ This is the required validation path for the first physical iPhone + motorcycle-
 - Perform initial protocol tests with the motorcycle stationary, parked securely and in a well-ventilated area.
 - Use only a display/motorcycle you own or are authorized to test.
 - Do not test unknown packet families while riding.
-- RideDash contains no ECU, throttle, brake, ABS, traction-control, immobilizer or engine-control command path.
+- OpenMoto contains no ECU, throttle, brake, ABS, traction-control, immobilizer or engine-control command path.
 - Stop immediately if the normal speed/fuel/warning display does not recover after projection is stopped.
 
 ## Before building
@@ -25,9 +25,9 @@ Do **not** commit the Wi-Fi password, authentication session key, private key ma
 
 ## Xcode setup
 
-1. Clone `DagerottDev/RideDash` and check out the default `main` branch.
-2. Open `RideDash.xcodeproj` in Xcode 16 or newer.
-3. Select your Apple Development team for the `RideDash` and `RideDashShare` targets.
+1. Clone `DagerottDev/OpenMoto` and check out the default `main` branch.
+2. Open `OpenMoto.xcodeproj` in Xcode 16 or newer.
+3. Select your Apple Development team for the `OpenMoto` and `OpenMotoShare` targets.
 4. Change bundle identifiers if your signing account requires it.
 5. Confirm the main target has **Hotspot Configuration** enabled.
 6. Confirm the app shows Local Network and Location permission strings.
@@ -36,7 +36,7 @@ Do **not** commit the Wi-Fi password, authentication session key, private key ma
 
 ## Stage 0 — Baseline display/Wi-Fi
 
-**Goal:** establish that the phone and dash can form the expected local network before RideDash sends anything.
+**Goal:** establish that the phone and dash can form the expected local network before OpenMoto sends anything.
 
 1. Power on the motorcycle normally.
 2. Enable the display's normal phone/navigation Wi-Fi mode.
@@ -48,11 +48,11 @@ Do **not** commit the Wi-Fi password, authentication session key, private key ma
 
 **Pass:** iPhone can reliably join the display AP.
 
-## Stage 1 — RideDash Wi-Fi + local network
+## Stage 1 — OpenMoto Wi-Fi + local network
 
 **Goal:** validate only Apple's Wi-Fi/local-network layer.
 
-1. Open RideDash → Settings → Diagnostics.
+1. Open OpenMoto → Settings → Diagnostics.
 2. Enter the real SSID and password locally.
 3. Tap **Request Wi-Fi Join**.
 4. Accept the native iOS approval prompt if shown.
@@ -89,11 +89,11 @@ The control connection binds its local source port to the configured control por
 
 Expected public-reference sequence:
 
-1. RideDash sends the initial K1G burst including the authentication request.
+1. OpenMoto sends the initial K1G burst including the authentication request.
 2. Dash sends RSA modulus (`07 00`) and exponent (`07 03`) on the input/control response channel.
-3. RideDash generates a new 32-byte AES-256 session key locally.
-4. RideDash encrypts `SSID UTF-8 || AES key` using the dash-provided RSA public key with PKCS#1 v1.5.
-5. RideDash sends the dynamic session-key packet.
+3. OpenMoto generates a new 32-byte AES-256 session key locally.
+4. OpenMoto encrypts `SSID UTF-8 || AES key` using the dash-provided RSA public key with PKCS#1 v1.5.
+5. OpenMoto sends the dynamic session-key packet.
 6. Dash returns `07 01 01` for success.
 
 Check Diagnostics for:
@@ -114,7 +114,7 @@ Repeat this stage after three cold ignition cycles. A stale/captured ciphertext 
 **Goal:** prove the control plane before H.264/RTP is involved.
 
 1. After authentication, tap **Enter Navigation Mode**.
-2. RideDash sends navigation context, empty-list state, route-card bursts, projection-on flags and start-navigation.
+2. OpenMoto sends navigation context, empty-list state, route-card bursts, projection-on flags and start-navigation.
 3. It then starts independent keep-alives:
    - projection-frame heartbeat at the configured FPS when projection is active,
    - route card at ~1 Hz,
@@ -155,7 +155,7 @@ Only after this passes should you try 8 fps or higher bitrate. Change one parame
 **Goal:** validate the end-to-end product path.
 
 1. Reconnect to an internet-capable network first if needed.
-2. In RideDash → Navigate, calculate a route with MapKit **before** joining a display Wi-Fi network that has no internet.
+2. In OpenMoto → Navigate, calculate a route with MapKit **before** joining a display Wi-Fi network that has no internet.
 3. Rejoin the display Wi-Fi.
 4. Authenticate and enter navigation.
 5. Disable Calibration grid.
@@ -184,7 +184,7 @@ Known public-reference input codes:
 
 1. Keep the motorcycle stationary.
 2. Press each relevant navigation control once.
-3. Confirm RideDash displays the last input and logs it.
+3. Confirm OpenMoto displays the last input and logs it.
 4. Confirm LEFT/RIGHT changes the selected route step in the app.
 5. Confirm the corresponding acknowledgement is transmitted when `respondToInput` is enabled.
 6. Record unknown codes but do not add speculative acknowledgements until understood.
@@ -199,7 +199,7 @@ Run these independently:
 2. Wi-Fi off/on on the iPhone.
 3. App foreground → inactive → foreground.
 4. Motorcycle ignition off/on.
-5. Force-close and relaunch RideDash.
+5. Force-close and relaunch OpenMoto.
 
 For each test, record whether manual reconnect is needed and whether the dash returns cleanly to normal mode.
 
@@ -255,7 +255,7 @@ When something fails, send/export:
 - exact dash firmware,
 - iPhone model + iOS version,
 - configured host/broadcast/ports/FPS/bitrate,
-- RideDash state shown in UI,
+- OpenMoto state shown in UI,
 - sanitized Diagnostic Log,
 - what appeared on the physical dash,
 - whether normal dash mode recovered after Stop/Disconnect.

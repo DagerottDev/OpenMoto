@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		000000000000000000000201 /* RideDashApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000101 /* RideDashApp.swift */; };
+		000000000000000000000201 /* OpenMotoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000101 /* OpenMotoApp.swift */; };
 		000000000000000000000202 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000102 /* RootView.swift */; };
 		000000000000000000000203 /* DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000103 /* DiagnosticsView.swift */; };
 		000000000000000000000204 /* TripperWiFiManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000104 /* TripperWiFiManager.swift */; };
@@ -21,7 +21,7 @@
 		000000000000000000000212 /* NavigationCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000113 /* NavigationCore.swift */; };
 		000000000000000000000213 /* ProductFeatures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000114 /* ProductFeatures.swift */; };
 		000000000000000000000214 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000116 /* ShareViewController.swift */; };
-		000000000000000000000215 /* RideDashShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 000000000000000000000004 /* RideDashShare.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		000000000000000000000215 /* OpenMotoShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 000000000000000000000004 /* OpenMotoShare.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		000000000000000000000216 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000118 /* PrivacyInfo.xcprivacy */; };
 		000000000000000000000217 /* UsageAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000119 /* UsageAnalytics.swift */; };
 /* End PBXBuildFile section */
@@ -32,7 +32,7 @@
 			containerPortal = 000000000000000000000001 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 000000000000000000000005;
-			remoteInfo = RideDashShare;
+			remoteInfo = OpenMotoShare;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -43,7 +43,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				000000000000000000000215 /* RideDashShare.appex in Embed App Extensions */,
+				000000000000000000000215 /* OpenMotoShare.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -51,9 +51,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		000000000000000000000003 /* RideDash.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RideDash.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		000000000000000000000004 /* RideDashShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RideDashShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		000000000000000000000101 /* RideDashApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideDashApp.swift; sourceTree = "<group>"; };
+		000000000000000000000003 /* OpenMoto.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenMoto.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000004 /* OpenMotoShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OpenMotoShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000101 /* OpenMotoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMotoApp.swift; sourceTree = "<group>"; };
 		000000000000000000000102 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		000000000000000000000103 /* DiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsView.swift; sourceTree = "<group>"; };
 		000000000000000000000104 /* TripperWiFiManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripperWiFiManager.swift; sourceTree = "<group>"; };
@@ -61,7 +61,7 @@
 		000000000000000000000106 /* DashTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashTransport.swift; sourceTree = "<group>"; };
 		000000000000000000000107 /* DiagnosticLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticLog.swift; sourceTree = "<group>"; };
 		000000000000000000000108 /* DashTestProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashTestProfile.swift; sourceTree = "<group>"; };
-		000000000000000000000109 /* RideDash.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RideDash.entitlements; sourceTree = "<group>"; };
+		000000000000000000000109 /* OpenMoto.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OpenMoto.entitlements; sourceTree = "<group>"; };
 		000000000000000000000110 /* DashSessionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashSessionCoordinator.swift; sourceTree = "<group>"; };
 		000000000000000000000111 /* DashProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashProtocol.swift; sourceTree = "<group>"; };
 		000000000000000000000112 /* ProjectionCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectionCore.swift; sourceTree = "<group>"; };
@@ -95,13 +95,13 @@
 		000000000000000000000010 = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000011 /* RideDash */,
-				000000000000000000000023 /* RideDashShare */,
+				000000000000000000000011 /* OpenMoto */,
+				000000000000000000000023 /* OpenMotoShare */,
 				000000000000000000000017 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		000000000000000000000011 /* RideDash */ = {
+		000000000000000000000011 /* OpenMoto */ = {
 			isa = PBXGroup;
 			children = (
 				000000000000000000000012 /* App */,
@@ -113,16 +113,16 @@
 				000000000000000000000015 /* Diagnostics */,
 				000000000000000000000016 /* Models */,
 				000000000000000000000115 /* Info.plist */,
-				000000000000000000000109 /* RideDash.entitlements */,
+				000000000000000000000109 /* OpenMoto.entitlements */,
 				000000000000000000000118 /* PrivacyInfo.xcprivacy */,
 			);
-			path = RideDash;
+			path = OpenMoto;
 			sourceTree = "<group>";
 		};
 		000000000000000000000012 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000101 /* RideDashApp.swift */,
+				000000000000000000000101 /* OpenMotoApp.swift */,
 				000000000000000000000119 /* UsageAnalytics.swift */,
 				000000000000000000000102 /* RootView.swift */,
 				000000000000000000000110 /* DashSessionCoordinator.swift */,
@@ -205,20 +205,20 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
-		000000000000000000000023 /* RideDashShare */ = {
+		000000000000000000000023 /* OpenMotoShare */ = {
 			isa = PBXGroup;
 			children = (
 				000000000000000000000116 /* ShareViewController.swift */,
 				000000000000000000000117 /* Info.plist */,
 			);
-			path = RideDashShare;
+			path = OpenMotoShare;
 			sourceTree = "<group>";
 		};
 		000000000000000000000017 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000003 /* RideDash.app */,
-				000000000000000000000004 /* RideDashShare.appex */,
+				000000000000000000000003 /* OpenMoto.app */,
+				000000000000000000000004 /* OpenMotoShare.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -226,9 +226,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		000000000000000000000002 /* RideDash */ = {
+		000000000000000000000002 /* OpenMoto */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 000000000000000000000402 /* Build configuration list for PBXNativeTarget "RideDash" */;
+			buildConfigurationList = 000000000000000000000402 /* Build configuration list for PBXNativeTarget "OpenMoto" */;
 			buildPhases = (
 				000000000000000000000301 /* Sources */,
 				000000000000000000000302 /* Frameworks */,
@@ -240,14 +240,14 @@
 			dependencies = (
 				000000000000000000000602 /* PBXTargetDependency */,
 			);
-			name = RideDash;
-			productName = RideDash;
-			productReference = 000000000000000000000003 /* RideDash.app */;
+			name = OpenMoto;
+			productName = OpenMoto;
+			productReference = 000000000000000000000003 /* OpenMoto.app */;
 			productType = "com.apple.product-type.application";
 		};
-		000000000000000000000005 /* RideDashShare */ = {
+		000000000000000000000005 /* OpenMotoShare */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 000000000000000000000403 /* Build configuration list for PBXNativeTarget "RideDashShare" */;
+			buildConfigurationList = 000000000000000000000403 /* Build configuration list for PBXNativeTarget "OpenMotoShare" */;
 			buildPhases = (
 				000000000000000000000311 /* Sources */,
 				000000000000000000000312 /* Frameworks */,
@@ -257,9 +257,9 @@
 			);
 			dependencies = (
 			);
-			name = RideDashShare;
-			productName = RideDashShare;
-			productReference = 000000000000000000000004 /* RideDashShare.appex */;
+			name = OpenMotoShare;
+			productName = OpenMotoShare;
+			productReference = 000000000000000000000004 /* OpenMotoShare.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -280,7 +280,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 000000000000000000000401 /* Build configuration list for PBXProject "RideDash" */;
+			buildConfigurationList = 000000000000000000000401 /* Build configuration list for PBXProject "OpenMoto" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -293,8 +293,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				000000000000000000000002 /* RideDash */,
-				000000000000000000000005 /* RideDashShare */,
+				000000000000000000000002 /* OpenMoto */,
+				000000000000000000000005 /* OpenMotoShare */,
 			);
 		};
 /* End PBXProject section */
@@ -322,7 +322,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				000000000000000000000201 /* RideDashApp.swift in Sources */,
+				000000000000000000000201 /* OpenMotoApp.swift in Sources */,
 				000000000000000000000217 /* UsageAnalytics.swift in Sources */,
 				000000000000000000000202 /* RootView.swift in Sources */,
 				000000000000000000000203 /* DiagnosticsView.swift in Sources */,
@@ -352,7 +352,7 @@
 /* Begin PBXTargetDependency section */
 		000000000000000000000602 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 000000000000000000000005 /* RideDashShare */;
+			target = 000000000000000000000005 /* OpenMotoShare */;
 			targetProxy = 000000000000000000000601 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -397,16 +397,18 @@
 		000000000000000000000503 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = RideDash/RideDash.entitlements;
+				CODE_SIGN_ENTITLEMENTS = OpenMoto/OpenMoto.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = RideDash/Info.plist;
+				INFOPLIST_FILE = OpenMoto/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.dagerott.RideDash;
+				// Keep the SwiftData model identity stable for existing installations.
+				PRODUCT_MODULE_NAME = RideDash;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -420,16 +422,18 @@
 		000000000000000000000504 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = RideDash/RideDash.entitlements;
+				CODE_SIGN_ENTITLEMENTS = OpenMoto/OpenMoto.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = RideDash/Info.plist;
+				INFOPLIST_FILE = OpenMoto/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.dagerott.RideDash;
+				// Keep the SwiftData model identity stable for existing installations.
+				PRODUCT_MODULE_NAME = RideDash;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -448,7 +452,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = RideDashShare/Info.plist;
+				INFOPLIST_FILE = OpenMotoShare/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
 				MARKETING_VERSION = 0.2.0;
@@ -469,7 +473,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = RideDashShare/Info.plist;
+				INFOPLIST_FILE = OpenMotoShare/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
 				MARKETING_VERSION = 0.2.0;
@@ -485,7 +489,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		000000000000000000000401 /* Build configuration list for PBXProject "RideDash" */ = {
+		000000000000000000000401 /* Build configuration list for PBXProject "OpenMoto" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				000000000000000000000501 /* Debug */,
@@ -494,7 +498,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		000000000000000000000402 /* Build configuration list for PBXNativeTarget "RideDash" */ = {
+		000000000000000000000402 /* Build configuration list for PBXNativeTarget "OpenMoto" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				000000000000000000000503 /* Debug */,
@@ -503,7 +507,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		000000000000000000000403 /* Build configuration list for PBXNativeTarget "RideDashShare" */ = {
+		000000000000000000000403 /* Build configuration list for PBXNativeTarget "OpenMotoShare" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				000000000000000000000505 /* Debug */,

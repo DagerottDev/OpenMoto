@@ -48,7 +48,7 @@ final class TripperWiFiManager: ObservableObject, DashWiFiJoining {
 
         // Persist the app-managed accessory-network configuration instead of using
         // joinOnce. Projection sessions can last for hours and joinOnce is intentionally
-        // short-lived. The user can remove this configuration explicitly from RideDash.
+        // short-lived. The user can remove this configuration explicitly from OpenMoto.
         configuration.joinOnce = false
 
         do {

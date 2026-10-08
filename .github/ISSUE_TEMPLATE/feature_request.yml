@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest an improvement within RideDash's navigation and infotainment scope.
+description: Suggest an improvement within OpenMoto's navigation and infotainment scope.
 title: "[Feature]: "
 body:
   - type: textarea

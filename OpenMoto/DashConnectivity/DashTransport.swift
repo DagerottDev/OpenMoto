@@ -41,7 +41,7 @@ final class DashTransport: ObservableObject {
 
     var onDatagram: (@Sendable (DashDatagram) -> Void)?
 
-    private let queue = DispatchQueue(label: "dev.dagerott.RideDash.dash-transport")
+    private let queue = DispatchQueue(label: "dev.dagerott.OpenMoto.dash-transport")
     private var controlConnection: NWConnection?
     private var videoConnection: NWConnection?
     private var inputListener: NWListener?

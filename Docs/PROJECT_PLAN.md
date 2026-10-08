@@ -1,4 +1,4 @@
-# RideDash iOS + Motorcycle Dash Projection
+# OpenMoto iOS + Motorcycle Dash Projection
 
 Complete hardware-in-the-loop implementation roadmap and current beta status.
 
@@ -8,7 +8,7 @@ Complete hardware-in-the-loop implementation roadmap and current beta status.
 
 ## 1. Current status
 
-RideDash is **code-complete for the planned first hardware beta**. No CI/CD pipeline is used. The remaining work is physical Xcode build/sign/install plus real-device and motorcycle-dash validation.
+OpenMoto is **code-complete for the planned first hardware beta**. No CI/CD pipeline is used. The remaining work is physical Xcode build/sign/install plus real-device and motorcycle-dash validation.
 
 ### Implemented in code
 
@@ -21,7 +21,7 @@ RideDash is **code-complete for the planned first hardware beta**. No CI/CD pipe
 - CoreLocation live navigation state.
 - Off-route detection with cooldown-protected automatic rerouting.
 - Remaining distance, ETA, GPS quality and route recalculation state.
-- Share Extension and `ridedash://` route deep links.
+- Share Extension and `openmoto://` route deep links.
 - User-approved compatible-display Wi-Fi join via `NEHotspotConfigurationManager`.
 - App-managed persistent Wi-Fi configuration.
 - Local-network monitoring with `NWPathMonitor`.
@@ -120,9 +120,9 @@ RideDash is **code-complete for the planned first hardware beta**. No CI/CD pipe
 ## 5. Current architecture
 
 ```text
-RideDashApp
+OpenMotoApp
 ├── App
-│   ├── RideDashApp
+│   ├── OpenMotoApp
 │   ├── RootView
 │   └── DashSessionCoordinator
 ├── Features
@@ -168,7 +168,7 @@ RideDashApp
 │   ├── FuelLog
 │   ├── MaintenanceRecord
 │   └── RideRecord
-└── RideDashShare
+└── OpenMotoShare
     └── URL/text Share Extension
 ```
 
@@ -346,8 +346,8 @@ Run tests in this order. Do not jump directly to video on the first session.
 
 ### Stage A — Xcode/device baseline
 
-1. Open `RideDash.xcodeproj`.
-2. Select the developer team for RideDash and RideDashShare.
+1. Open `OpenMoto.xcodeproj`.
+2. Select the developer team for OpenMoto and OpenMotoShare.
 3. Compile/sign/install on the physical iPhone.
 4. Fix any Xcode/compiler/signing issues found by the real SDK.
 5. Open Diagnostics and run the local deterministic self-check.
@@ -358,7 +358,7 @@ Run tests in this order. Do not jump directly to video on the first session.
 2. Enable the display Wi-Fi/AP through the normal motorcycle UI.
 3. Record the SSID.
 4. Confirm manual iOS join once.
-5. Use RideDash to join the compatible display Wi-Fi.
+5. Use OpenMoto to join the compatible display Wi-Fi.
 6. Confirm `NWPath` reports Wi-Fi/local networking.
 7. Confirm control transport can become ready.
 
@@ -447,7 +447,7 @@ Before public distribution:
 ## 15. Current repository workflow
 
 - Implementation branch: `phase-1-connectivity-diagnostics`
-- Draft PR: RideDash iOS complete first hardware-beta implementation
+- Draft PR: OpenMoto iOS complete first hardware-beta implementation
 - CI/CD: intentionally not used
 - Validation: manual Xcode + physical iPhone + owned motorcycle dash
 

@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDisplayName</key>
-    <string>RideDash</string>
+    <string>OpenMoto</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -25,9 +25,9 @@
     <key>TelemetryDeckNamespace</key>
     <string>dev.dagerott.ridedash</string>
     <key>NSLocalNetworkUsageDescription</key>
-    <string>RideDash uses the local network to connect to a compatible motorcycle display for navigation and diagnostics.</string>
+    <string>OpenMoto uses the local network to connect to a compatible motorcycle display for navigation and diagnostics.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>RideDash uses your location to calculate routes and provide live riding navigation.</string>
+    <string>OpenMoto uses your location to calculate routes and provide live riding navigation.</string>
     <key>UIBackgroundModes</key>
     <array>
         <string>location</string>
@@ -38,9 +38,11 @@
     <array>
         <dict>
             <key>CFBundleURLName</key>
-            <string>dev.dagerott.RideDash.route</string>
+            <string>dev.dagerott.OpenMoto.route</string>
             <key>CFBundleURLSchemes</key>
             <array>
+                <string>openmoto</string>
+                <!-- Retain links shared before the OpenMoto rename. -->
                 <string>ridedash</string>
             </array>
         </dict>

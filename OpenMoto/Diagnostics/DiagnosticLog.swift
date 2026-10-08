@@ -38,7 +38,7 @@ final class DiagnosticLog: ObservableObject {
     func exportText(profile: DashTestProfile) -> String {
         let formatter = ISO8601DateFormatter()
         var lines: [String] = [
-            "RideDash diagnostic session",
+            "OpenMoto diagnostic session",
             "Generated: \(formatter.string(from: Date()))",
             "Bike: \(profile.bikeModel)",
             "Dash firmware: \(profile.dashFirmware.isEmpty ? "unknown" : profile.dashFirmware)",

@@ -76,12 +76,12 @@ final class UsageAnalytics: ObservableObject {
             "appID": configuration.appID,
             "clientUser": sessionID,
             "sessionID": sessionID,
-            "type": "RideDash.Screen.viewed",
+            "type": "OpenMoto.Screen.viewed",
             "isTestMode": false,
             "payload": [
-                "RideDash.screen": screen.rawValue,
-                "RideDash.platform": "iOS",
-                "RideDash.releaseStage": "testing"
+                "OpenMoto.screen": screen.rawValue,
+                "OpenMoto.platform": "iOS",
+                "OpenMoto.releaseStage": "testing"
             ]
         ]
         guard let body = try? JSONSerialization.data(withJSONObject: [event]) else { return }

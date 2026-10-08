@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        RideDash is in testing. Search existing issues first. Use sample data; remove passwords, SSIDs, keys, registrations and personal routes from attachments. Do not post security vulnerabilities publicly.
+        OpenMoto is in testing. Search existing issues first. Use sample data; remove passwords, SSIDs, keys, registrations and personal routes from attachments. Do not post security vulnerabilities publicly.
   - type: input
     id: version
     attributes:

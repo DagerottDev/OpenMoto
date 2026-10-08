@@ -2,7 +2,7 @@ import SwiftData
 import SwiftUI
 
 @main
-struct RideDashApp: App {
+struct OpenMotoApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()

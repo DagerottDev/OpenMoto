@@ -234,7 +234,7 @@ struct DashboardView: View {
                 LabeledContent("Expenses", value: currentMonthSpend.formatted(.currency(code: currency)))
             }
         }
-        .navigationTitle("RideDash")
+        .navigationTitle("OpenMoto")
     }
 
     private var currentMonthSpend: Double {
@@ -462,7 +462,7 @@ struct DisplayConnectionView: View {
                 if session.state == .authenticated || session.state == .navigationReady || session.state == .projecting {
                     Button("Enter Navigation Mode") {
                         Task {
-                            try? await session.enterNavigation(title: navigation.destination?.name ?? "RideDash")
+                            try? await session.enterNavigation(title: navigation.destination?.name ?? "OpenMoto")
                         }
                     }
                 }
@@ -802,7 +802,7 @@ struct AddMaintenanceView: View {
                     Toggle("Remind on a date", isOn: $nextDueDateEnabled)
                     if nextDueDateEnabled {
                         DatePicker("Due date", selection: $nextDueDate, displayedComponents: .date)
-                        Text("RideDash will request notification permission when you save this reminder.")
+                        Text("OpenMoto will request notification permission when you save this reminder.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -856,7 +856,7 @@ enum MaintenanceReminderScheduler {
 
             let content = UNMutableNotificationContent()
             content.title = "Maintenance due"
-            content.body = "\(title) is due today. Open RideDash to review your garage log."
+            content.body = "\(title) is due today. Open OpenMoto to review your garage log."
             content.sound = .default
 
             var components = Calendar.current.dateComponents([.year, .month, .day], from: dueDate)
@@ -1093,14 +1093,14 @@ struct SettingsView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                Link("Privacy details", destination: URL(string: "https://github.com/DagerottDev/RideDash/blob/main/PRIVACY.md")!)
+                Link("Privacy details", destination: URL(string: "https://github.com/DagerottDev/OpenMoto/blob/main/PRIVACY.md")!)
             }
 
             Section("Testing phase — testers wanted") {
-                Text("RideDash is experimental. Physical iPhone and motorcycle-display compatibility testing is still pending. Start with the tester guide and report your results.")
+                Text("OpenMoto is experimental. Physical iPhone and motorcycle-display compatibility testing is still pending. Start with the tester guide and report your results.")
                     .font(.caption)
-                Link("Tester guide", destination: URL(string: "https://github.com/DagerottDev/RideDash/blob/main/Docs/TESTING.md")!)
-                Link("Report a bug or test result", destination: URL(string: "https://github.com/DagerottDev/RideDash/issues/new/choose")!)
+                Link("Tester guide", destination: URL(string: "https://github.com/DagerottDev/OpenMoto/blob/main/Docs/TESTING.md")!)
+                Link("Report a bug or test result", destination: URL(string: "https://github.com/DagerottDev/OpenMoto/issues/new/choose")!)
             }
 
             Section("Navigation behavior") {
@@ -1114,13 +1114,13 @@ struct SettingsView: View {
             }
 
             Section("Maintenance reminders") {
-                Text("When a maintenance entry includes a due date, RideDash schedules a local notification for 9:00 AM on that date after you grant notification permission.")
+                Text("When a maintenance entry includes a due date, OpenMoto schedules a local notification for 9:00 AM on that date after you grant notification permission.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             Section("Safety") {
-                Text("RideDash limits display integration to navigation/infotainment. It does not send ECU, throttle, brake, ABS, immobilizer or other safety-critical vehicle-control commands.")
+                Text("OpenMoto limits display integration to navigation/infotainment. It does not send ECU, throttle, brake, ABS, immobilizer or other safety-critical vehicle-control commands.")
                     .font(.caption)
             }
         }

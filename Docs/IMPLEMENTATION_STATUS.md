@@ -1,6 +1,6 @@
-# RideDash Implementation Status
+# OpenMoto Implementation Status
 
-RideDash is **code-complete for the planned first hardware beta**. Final validation is intentionally manual on a physical iPhone and the user's owned motorcycle display; there is no CI/CD workflow in this repository.
+OpenMoto is **code-complete for the planned first hardware beta**. Final validation is intentionally manual on a physical iPhone and the user's owned motorcycle display; there is no CI/CD workflow in this repository.
 
 ## iOS product
 
@@ -19,7 +19,7 @@ RideDash is **code-complete for the planned first hardware beta**. Final validat
 - [x] Off-route detection and cooldown-protected route recalculation
 - [x] Remaining-distance / ETA updates
 - [x] Apple Maps hand-off
-- [x] `ridedash://` route deep links
+- [x] `openmoto://` route deep links
 - [x] Share Extension for shared map URLs/text
 - [x] Currency / distance preferences
 - [x] Persisted background-navigation behavior
@@ -104,4 +104,4 @@ Follow [`MANUAL_TEST_GUIDE.md`](MANUAL_TEST_GUIDE.md) in order. Do not skip dire
 
 ## Validation policy
 
-No GitHub Actions or CI/CD workflow is used. The first final integration build is compiled, signed and installed manually in Xcode. Unknown protocol families remain read-only, and RideDash permanently excludes ECU, throttle, brakes, ABS, traction control, immobilizer, engine control and other safety-critical vehicle commands.
+No GitHub Actions or CI/CD workflow is used. The first final integration build is compiled, signed and installed manually in Xcode. Unknown protocol families remain read-only, and OpenMoto permanently excludes ECU, throttle, brakes, ABS, traction control, immobilizer, engine control and other safety-critical vehicle commands.

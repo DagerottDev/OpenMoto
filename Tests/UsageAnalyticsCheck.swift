@@ -34,7 +34,7 @@ final class AnalyticsStub: URLProtocol {
 struct UsageAnalyticsCheck {
     @MainActor
     static func main() async throws {
-        let suite = "RideDash.AnalyticsCheck.\(UUID())"
+        let suite = "OpenMoto.AnalyticsCheck.\(UUID())"
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }
         let network = URLSessionConfiguration.ephemeral
@@ -75,10 +75,10 @@ struct UsageAnalyticsCheck {
             let event = try decode(request)
             assert(Set(event.keys) == ["appID", "clientUser", "sessionID", "type", "isTestMode", "payload"])
             assert(event["appID"] as? String == appID)
-            assert(event["type"] as? String == "RideDash.Screen.viewed")
+            assert(event["type"] as? String == "OpenMoto.Screen.viewed")
             assert(event["isTestMode"] as? Bool == false)
             let payload = event["payload"] as! [String: String]
-            assert(payload == ["RideDash.screen": screen.rawValue, "RideDash.platform": "iOS", "RideDash.releaseStage": "testing"])
+            assert(payload == ["OpenMoto.screen": screen.rawValue, "OpenMoto.platform": "iOS", "OpenMoto.releaseStage": "testing"])
             let id = event["clientUser"] as! String
             assert(UUID(uuidString: id) != nil && event["sessionID"] as? String == id)
             if originalID.isEmpty { originalID = id }

@@ -8,7 +8,7 @@ final class LocalNetworkMonitor: ObservableObject {
     @Published private(set) var usesWiFi = false
 
     private let monitor = NWPathMonitor()
-    private let queue = DispatchQueue(label: "dev.dagerott.RideDash.path-monitor")
+    private let queue = DispatchQueue(label: "dev.dagerott.OpenMoto.path-monitor")
     private var started = false
 
     func start() {

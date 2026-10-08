@@ -1,6 +1,6 @@
-# RideDash protocol notes
+# OpenMoto protocol notes
 
-This document records the interoperability assumptions currently encoded in RideDash. These are **not manufacturer specifications**. They are implementation notes based on publicly available independent interoperability work and must be verified against hardware you own/control.
+This document records the interoperability assumptions currently encoded in OpenMoto. These are **not manufacturer specifications**. They are implementation notes based on publicly available independent interoperability work and must be verified against hardware you own/control.
 
 ## Default network profile
 
@@ -48,7 +48,7 @@ Current public-reference behavior implemented by `DashAuthenticator`:
 2. Display supplies RSA public material as K1G segments:
    - `07 00` — modulus
    - `07 03` — exponent
-3. RideDash creates a cryptographically random 32-byte AES key using `SecRandomCopyBytes`.
+3. OpenMoto creates a cryptographically random 32-byte AES key using `SecRandomCopyBytes`.
 4. Plaintext is `UTF8(display Wi-Fi SSID) || AES-256 session key`.
 5. Plaintext is encrypted with the display-provided RSA key using PKCS#1 v1.5 (`SecKeyAlgorithm.rsaEncryptionPKCS1`).
 6. Ciphertext is inserted in the reference session-key K1G packet.
@@ -81,7 +81,7 @@ The current reference input decoder maps `09 00` one-byte payloads:
 | `0x15` | DOWN |
 | `0x18` | CLICK |
 
-RideDash maps these only to navigation UI actions. The corresponding acknowledgement uses the public `06 80 0001 XX` pattern.
+OpenMoto maps these only to navigation UI actions. The corresponding acknowledgement uses the public `06 80 0001 XX` pattern.
 
 ## H.264 / RTP
 
@@ -93,7 +93,7 @@ Video is generated natively with VideoToolbox:
 - default 526×300
 - low initial FPS/bitrate for decoder stability
 
-VideoToolbox produces AVCC length-prefixed NAL units. RideDash extracts them and captures the encoder's own SPS/PPS.
+VideoToolbox produces AVCC length-prefixed NAL units. OpenMoto extracts them and captures the encoder's own SPS/PPS.
 
 The embedded-display compatibility behavior follows the public working packetizer:
 

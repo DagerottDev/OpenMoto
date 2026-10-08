@@ -7,7 +7,8 @@
 ![Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge)
 
 <div align="center">
-  <h1>RideDash</h1>
+  <h1>OpenMoto</h1>
+  <p>Formerly RideDash.</p>
   <p>A native iOS motorcycle navigation and ride companion with experimental Wi-Fi display projection.</p>
   <p><strong>Testing phase — looking for iPhone testers and authorized display owners.</strong></p>
   <p>
@@ -17,7 +18,7 @@
     &middot;
     <a href="Docs/MANUAL_TEST_GUIDE.md">Hardware Test Guide</a>
     &middot;
-    <a href="https://github.com/DagerottDev/RideDash/issues/new/choose">Report Bug or Request Feature</a>
+    <a href="https://github.com/DagerottDev/OpenMoto/issues/new/choose">Report Bug or Request Feature</a>
   </p>
 </div>
 
@@ -50,19 +51,19 @@
 
 ## About The Project
 
-RideDash brings navigation, motorcycle records, and ride expenses into one iPhone app. Its local data uses SwiftData, while an experimental interoperability layer projects navigation onto compatible Wi-Fi motorcycle displays.
+OpenMoto brings navigation, motorcycle records, and ride expenses into one iPhone app. Its local data uses SwiftData, while an experimental interoperability layer projects navigation onto compatible Wi-Fi motorcycle displays.
 
 Implemented capabilities include:
 
 - **Navigation:** MapKit destination search and route preview, CoreLocation maneuver tracking, remaining distance and ETA, off-route detection with automatic rerouting, and Apple Maps hand-off.
-- **Route intake:** destination text, coordinates, shared map URLs/text through a Share Extension, and `ridedash://route?url=...` deep links.
+- **Route intake:** destination text, coordinates, shared map URLs/text through a Share Extension, and `openmoto://route?url=...` deep links.
 - **Vehicle and garage records:** multiple vehicles with active selection, document expiry dates, fuel logs with full-tank mileage calculation, maintenance history, next-due distance/date, and local due-date reminders.
 - **Expenses and rides:** categorized expenses with CSV export, manual ride entries, automatic recording during projection sessions, and currency/distance preferences.
 - **Display integration:** user-approved Wi-Fi joining, UDP control/input/video channels, K1G/TLV framing, dynamic RSA session authentication with a fresh ephemeral AES-256 key, and navigation/projection keep-alives.
 - **Projection and recovery:** a 526 × 300 renderer, calibration grid, VideoToolbox H.264 Baseline encoding, RTP/FU-A packetization, known LEFT/RIGHT/DOWN/CLICK inputs and acknowledgments, and bounded automatic reconnect.
 - **Diagnostics:** hardware profiles, network/session/stream counters, thermal and battery telemetry, Low Power Mode monitoring, sanitized log export, and a local protocol/RTP self-check.
 
-RideDash is independent and brand-neutral. Display integration is limited to navigation and infotainment. ECU, throttle, brakes, ABS, traction control, immobilizer, engine control, firmware modification, and other safety-critical vehicle commands are permanently excluded. See [Safety Scope](Docs/SAFETY_SCOPE.md) and [NOTICE](NOTICE).
+OpenMoto is independent and brand-neutral. Display integration is limited to navigation and infotainment. ECU, throttle, brakes, ABS, traction control, immobilizer, engine control, firmware modification, and other safety-critical vehicle commands are permanently excluded. See [Safety Scope](Docs/SAFETY_SCOPE.md) and [NOTICE](NOTICE).
 
 ### Current Status
 
@@ -102,16 +103,16 @@ The project uses Apple frameworks without third-party package dependencies.
 1. Clone the default branch (`main`) and open the Xcode project:
 
    ```sh
-   git clone https://github.com/DagerottDev/RideDash.git
-   cd RideDash
-   open RideDash.xcodeproj
+   git clone https://github.com/DagerottDev/OpenMoto.git
+   cd OpenMoto
+   open OpenMoto.xcodeproj
    ```
 
-   If you already have a checkout, open its existing `RideDash.xcodeproj`. No package-manager installation or environment-variable configuration is required. Optional TelemetryDeck screen analytics is off by default and disabled in Debug/Simulator; see [PRIVACY.md](PRIVACY.md) for the public release configuration and fork setup.
+   If you already have a checkout, open its existing `OpenMoto.xcodeproj`. No package-manager installation or environment-variable configuration is required. Optional TelemetryDeck screen analytics is off by default and disabled in Debug/Simulator; see [PRIVACY.md](PRIVACY.md) for the public release configuration and fork setup.
 
-2. In **Signing & Capabilities**, select your Apple Development team for both **RideDash** and **RideDashShare**. Change bundle identifiers if required by your signing account; keep the extension identifier under the app identifier.
-3. Confirm the **Hotspot Configuration** capability is enabled for the RideDash target. The committed app configuration includes Local Network and Location usage descriptions and the location background mode.
-4. Select the **RideDash** scheme and your physical iPhone, then use **Product → Run** to build, sign, and install.
+2. In **Signing & Capabilities**, select your Apple Development team for both **OpenMoto** and **OpenMotoShare**. Change bundle identifiers if required by your signing account; keep the extension identifier under the app identifier.
+3. Confirm the **Hotspot Configuration** capability is enabled for the OpenMoto target. The committed app configuration includes Local Network and Location usage descriptions and the location background mode.
+4. Select the **OpenMoto** scheme and your physical iPhone, then use **Product → Run** to build, sign, and install.
 5. Grant Location permission for routing and Local Network permission when testing the display connection. Notification permission is used for maintenance reminders.
 
 Before connecting hardware, read the [Tester Guide](Docs/TESTING.md) and [Manual Hardware Test Guide](Docs/MANUAL_TEST_GUIDE.md).
@@ -120,13 +121,13 @@ Before connecting hardware, read the [Tester Guide](Docs/TESTING.md) and [Manual
 
 ## Testers Wanted
 
-**RideDash is currently in testing, and we need testers.** This is an experimental source-build preview; hardware compatibility and reliable projection are not yet established. There is no App Store or TestFlight download.
+**OpenMoto is currently in testing, and we need testers.** This is an experimental source-build preview; hardware compatibility and reliable projection are not yet established. There is no App Store or TestFlight download.
 
 - **iPhone app testers:** check installation, navigation, garage/fuel/maintenance records, expense CSV export, ride records, and permissions.
 - **Authorized display owners:** follow the staged hardware guide, beginning with stationary Wi-Fi and authentication tests. Record both passes and failures, including firmware and normal-display recovery.
 - **Swift contributors:** help reproduce bugs, improve accessibility, and review the existing navigation and interoperability implementation.
 
-Start with [Docs/TESTING.md](Docs/TESTING.md), then submit a [test result, bug, or feature request](https://github.com/DagerottDev/RideDash/issues/new/choose). Remove personal information from logs and screenshots before posting.
+Start with [Docs/TESTING.md](Docs/TESTING.md), then submit a [test result, bug, or feature request](https://github.com/DagerottDev/OpenMoto/issues/new/choose). Remove personal information from logs and screenshots before posting.
 
 <p align="right"><a href="#readme-top">Back to top</a></p>
 
@@ -139,7 +140,9 @@ Start with [Docs/TESTING.md](Docs/TESTING.md), then submit a [test result, bug, 
 3. Open **Navigate**, allow Location access, and enter a destination name, coordinates, or a map URL.
 4. Tap the route arrow beside the destination field. Review the map, maneuver, distance, and ETA. Use **Apple Maps** to hand the destination to Apple's navigation app.
 
-The Share Extension accepts a URL or text from another app's share sheet and forwards it to RideDash's route intake. Deep links use `ridedash://route?url=<percent-encoded destination or map URL>`; the hand-off still needs validation on the target device.
+The app retains its original bundle identifiers and Swift module name to preserve installed-app and SwiftData identity. Existing `ridedash://` route links remain supported; new links use `openmoto://`. Keep your existing signing identifiers when updating an installed build. Physical-device upgrade and data-retention validation is still pending.
+
+The Share Extension accepts a URL or text from another app's share sheet and forwards it to OpenMoto's route intake. Deep links use `openmoto://route?url=<percent-encoded destination or map URL>`; the hand-off still needs validation on the target device.
 
 ### Test a Display Connection
 
@@ -189,13 +192,13 @@ Build and run manually in Xcode as described above. There is no CI workflow or X
 
 | Source area | Responsibility |
 |---|---|
-| [`RideDash/App/`](RideDash/App/) | App entry, tab navigation, session coordination, and automatic ride recording |
-| [`RideDash/Features/`](RideDash/Features/) | Product screens, SwiftData models, settings, and diagnostics UI |
-| [`RideDash/NavigationCore/`](RideDash/NavigationCore/) | Destination resolution, location, route state, and rerouting |
-| [`RideDash/DashConnectivity/`](RideDash/DashConnectivity/) | Wi-Fi, local-network state, and UDP channels |
-| [`RideDash/DashProtocol/`](RideDash/DashProtocol/) | K1G framing, authentication, and input decoding |
-| [`RideDash/ProjectionCore/`](RideDash/ProjectionCore/) | Renderer, H.264 encoder, RTP packetizer, and streamer |
-| [`RideDashShare/`](RideDashShare/) | URL/text Share Extension |
+| [`OpenMoto/App/`](OpenMoto/App/) | App entry, tab navigation, session coordination, and automatic ride recording |
+| [`OpenMoto/Features/`](OpenMoto/Features/) | Product screens, SwiftData models, settings, and diagnostics UI |
+| [`OpenMoto/NavigationCore/`](OpenMoto/NavigationCore/) | Destination resolution, location, route state, and rerouting |
+| [`OpenMoto/DashConnectivity/`](OpenMoto/DashConnectivity/) | Wi-Fi, local-network state, and UDP channels |
+| [`OpenMoto/DashProtocol/`](OpenMoto/DashProtocol/) | K1G framing, authentication, and input decoding |
+| [`OpenMoto/ProjectionCore/`](OpenMoto/ProjectionCore/) | Renderer, H.264 encoder, RTP packetizer, and streamer |
+| [`OpenMotoShare/`](OpenMotoShare/) | URL/text Share Extension |
 
 Use the existing documentation for the full validation record:
 
@@ -225,7 +228,7 @@ See the [Project Plan](Docs/PROJECT_PLAN.md) for detailed acceptance criteria an
 
 ## Contributing
 
-Contributions and tester feedback are welcome through the [issue forms](https://github.com/DagerottDev/RideDash/issues/new/choose) and pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md). Build/run relevant changes in Xcode, run the local protocol/RTP self-check for interoperability changes, and record hardware results when applicable. Preserve the safety boundary and keep credentials, keys, and personal route history out of contributions.
+Contributions and tester feedback are welcome through the [issue forms](https://github.com/DagerottDev/OpenMoto/issues/new/choose) and pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md). Build/run relevant changes in Xcode, run the local protocol/RTP self-check for interoperability changes, and record hardware results when applicable. Preserve the safety boundary and keep credentials, keys, and personal route history out of contributions.
 
 For hardware failures, include the test stage, display firmware, iPhone/iOS version, protocol settings, observed state, sanitized logs, and whether the normal display recovered after stopping. Use the [failure-reporting guide](Docs/MANUAL_TEST_GUIDE.md#failure-reporting).
 
@@ -239,7 +242,7 @@ Licensed under the [Apache License, Version 2.0](LICENSE). Preserve [NOTICE](NOT
 
 ## Contact
 
-Project support and feature discussions: [RideDash issues][issues-url].
+Project support and feature discussions: [OpenMoto issues][issues-url].
 
 <p align="right"><a href="#readme-top">Back to top</a></p>
 
@@ -249,11 +252,11 @@ Project support and feature discussions: [RideDash issues][issues-url].
 - Apple public frameworks for networking, navigation, rendering, and encoding.
 - README layout inspired by [Best-README-Template](https://github.com/othneildrew/Best-README-Template).
 
-Third-party names and trademarks belong to their respective owners. RideDash is not affiliated with, endorsed by, or sponsored by those owners.
+Third-party names and trademarks belong to their respective owners. OpenMoto is not affiliated with, endorsed by, or sponsored by those owners.
 
 <p align="right"><a href="#readme-top">Back to top</a></p>
 
 [swift-shield]: https://img.shields.io/badge/Swift-F05138?style=for-the-badge&logo=swift&logoColor=white
 [ios-shield]: https://img.shields.io/badge/iOS-17%2B-000000?style=for-the-badge&logo=apple&logoColor=white
 [xcode-shield]: https://img.shields.io/badge/Xcode-16%2B-147EFB?style=for-the-badge&logo=xcode&logoColor=white
-[issues-url]: https://github.com/DagerottDev/RideDash/issues
+[issues-url]: https://github.com/DagerottDev/OpenMoto/issues

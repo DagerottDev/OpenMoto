@@ -27,7 +27,7 @@ final class ShareViewController: UIViewController {
                 } else {
                     text = nil
                 }
-                DispatchQueue.main.async { self?.openRideDash(with: text) }
+                DispatchQueue.main.async { self?.openOpenMoto(with: text) }
             }
             return
         }
@@ -35,7 +35,7 @@ final class ShareViewController: UIViewController {
         if let provider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) }) {
             provider.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) { [weak self] value, _ in
                 DispatchQueue.main.async {
-                    self?.openRideDash(with: value as? String)
+                    self?.openOpenMoto(with: value as? String)
                 }
             }
             return
@@ -44,10 +44,10 @@ final class ShareViewController: UIViewController {
         complete()
     }
 
-    private func openRideDash(with sharedValue: String?) {
+    private func openOpenMoto(with sharedValue: String?) {
         guard let sharedValue,
               !sharedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              var components = URLComponents(string: "ridedash://route") else {
+              var components = URLComponents(string: "openmoto://route") else {
             complete()
             return
         }

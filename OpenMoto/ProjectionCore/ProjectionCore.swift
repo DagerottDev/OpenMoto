@@ -6,7 +6,7 @@ import UIKit
 import VideoToolbox
 
 struct ProjectionUIState: Sendable, Hashable {
-    var destination = "RideDash"
+    var destination = "OpenMoto"
     var maneuver = "Continue"
     var distanceToManeuver = "--"
     var eta = "--"

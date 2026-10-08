@@ -203,7 +203,8 @@ final class NavigationViewModel: ObservableObject {
     }
 
     func importURL(_ url: URL) {
-        if url.scheme?.lowercased() == "ridedash" {
+        // Keep previously shared route links working after the rename.
+        if ["openmoto", "ridedash"].contains(url.scheme?.lowercased() ?? "") {
             let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
             if let value = components?.queryItems?.first(where: {
                 ["url", "q", "destination"].contains($0.name.lowercased())
@@ -291,7 +292,7 @@ final class NavigationViewModel: ObservableObject {
     private func rebuildProjectionState(location: CLLocation?, forcedStatus: String? = nil) {
         guard let route, let destination else {
             projectionState = ProjectionUIState(
-                destination: destination?.name ?? "RideDash",
+                destination: destination?.name ?? "OpenMoto",
                 speedKph: max(0, (location?.speed ?? 0) * 3.6),
                 gpsAccuracy: location?.horizontalAccuracy,
                 statusMessage: forcedStatus
