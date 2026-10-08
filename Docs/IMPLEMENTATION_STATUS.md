@@ -73,6 +73,18 @@ RideDash is **code-complete for the planned first hardware beta**. Final validat
 - [x] Independent-project / interoperability NOTICE
 - [x] Safety boundary documented in code and docs
 
+## Open-source testing preview — 8 October 2026
+
+- [x] Apache-2.0 license and preserved interoperability attribution
+- [x] Tester guide and GitHub bug/test-result/feature issue forms
+- [x] Unsigned Simulator Debug and iPhone Release compile on Xcode 27
+- [x] Optional, off-by-default TelemetryDeck screen analytics and privacy disclosure
+- [x] Standalone analytics contract checks (no external traffic)
+- [x] Synthetic test-mode ingestion accepted with HTTP 200
+- [ ] Physical-device analytics/consent verification
+
+See [validation details](VALIDATION.md). This remains build-from-source only; no packaged release is produced.
+
 ## Hardware validation still required
 
 The code intentionally keeps firmware-sensitive assumptions configurable. The following cannot be truthfully marked complete until the physical test:

@@ -3,7 +3,7 @@ import SwiftData
 import SwiftUI
 
 struct RootView: View {
-    enum Tab: Hashable { case home, navigation, garage, expenses, rides, settings }
+    typealias Tab = UsageAnalytics.Screen
 
     @Environment(\.modelContext) private var modelContext
     @StateObject private var session = DashSessionCoordinator()
@@ -48,7 +48,9 @@ struct RootView: View {
                 navigation?.handleDashButton(button)
             }
             navigation.startLocation()
+            UsageAnalytics.shared.screenViewed(selectedTab)
         }
+        .onChange(of: selectedTab) { _, tab in UsageAnalytics.shared.screenViewed(tab) }
         .onChange(of: session.state) { oldState, newState in
             handleSessionTransition(from: oldState, to: newState)
         }

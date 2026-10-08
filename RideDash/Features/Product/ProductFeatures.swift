@@ -211,7 +211,7 @@ struct DashboardView: View {
 
             Section("Active vehicle") {
                 if let vehicle = activeVehicle {
-                    LabeledContent(vehicle.name, value: "\(vehicle.odometerKm, specifier: "%.0f") km")
+                    LabeledContent(vehicle.name, value: String(format: "%.0f km", vehicle.odometerKm))
                     if !vehicle.registrationNumber.isEmpty {
                         LabeledContent("Registration", value: vehicle.registrationNumber)
                     }
@@ -695,7 +695,7 @@ struct GarageView: View {
                 ForEach(Array(fuelLogs.prefix(10))) { entry in
                     LabeledContent(
                         "\(entry.litres, specifier: "%.1f") L",
-                        value: "\(entry.odometerKm, specifier: "%.0f") km"
+                        value: String(format: "%.0f km", entry.odometerKm)
                     )
                 }
             }
@@ -1051,6 +1051,7 @@ struct AddRideView: View {
 // MARK: - Settings
 
 struct SettingsView: View {
+    @ObservedObject private var analytics = UsageAnalytics.shared
     @AppStorage("settings.currency") private var currency = "INR"
     @AppStorage("settings.distance") private var distanceUnit = "km"
     @AppStorage("settings.backgroundLocation") private var backgroundLocation = false
@@ -1072,9 +1073,34 @@ struct SettingsView: View {
             }
 
             Section("Display integration") {
-                NavigationLink("Connection & Projection") { DisplayConnectionView() }
-                NavigationLink("Diagnostics") { DiagnosticsView() }
+                NavigationLink("Connection & Projection") {
+                    DisplayConnectionView().onAppear { analytics.screenViewed(.connection) }
+                }
+                NavigationLink("Diagnostics") {
+                    DiagnosticsView().onAppear { analytics.screenViewed(.diagnostics) }
+                }
                 NavigationLink("Vehicles") { VehiclesView() }
+            }
+
+            Section("Privacy") {
+                Toggle("Share anonymous usage analytics", isOn: $analytics.enabled)
+                    .disabled(!analytics.isConfigured)
+                Text("Optional TelemetryDeck analytics shares screen names and a random ID that resets when the app restarts or you turn sharing off. It excludes locations, routes, vehicle records, expenses, credentials and diagnostic logs. Turning this off cancels pending requests; previously received events remain with TelemetryDeck.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if !analytics.isConfigured {
+                    Text("Analytics is unavailable in this build.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Link("Privacy details", destination: URL(string: "https://github.com/DagerottDev/RideDash/blob/main/PRIVACY.md")!)
+            }
+
+            Section("Testing phase — testers wanted") {
+                Text("RideDash is experimental. Physical iPhone and motorcycle-display compatibility testing is still pending. Start with the tester guide and report your results.")
+                    .font(.caption)
+                Link("Tester guide", destination: URL(string: "https://github.com/DagerottDev/RideDash/blob/main/Docs/TESTING.md")!)
+                Link("Report a bug or test result", destination: URL(string: "https://github.com/DagerottDev/RideDash/issues/new/choose")!)
             }
 
             Section("Navigation behavior") {

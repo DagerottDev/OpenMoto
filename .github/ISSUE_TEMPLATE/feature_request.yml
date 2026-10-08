@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an improvement within RideDash's navigation and infotainment scope.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the user workflow without private route or vehicle data.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior and alternatives
+    validations:
+      required: true
+  - type: textarea
+    id: testing
+    attributes:
+      label: How could we validate this?
+      description: Mention required hardware, compatibility or accessibility considerations.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Project scope
+      options:
+        - label: This request stays within navigation/infotainment and excludes safety-critical vehicle control and firmware modification.
+          required: true

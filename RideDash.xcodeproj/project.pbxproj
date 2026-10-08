@@ -23,6 +23,7 @@
 		000000000000000000000214 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000116 /* ShareViewController.swift */; };
 		000000000000000000000215 /* RideDashShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 000000000000000000000004 /* RideDashShare.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		000000000000000000000216 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000118 /* PrivacyInfo.xcprivacy */; };
+		000000000000000000000217 /* UsageAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000119 /* UsageAnalytics.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +71,7 @@
 		000000000000000000000116 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		000000000000000000000117 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		000000000000000000000118 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		000000000000000000000119 /* UsageAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageAnalytics.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,6 +123,7 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000101 /* RideDashApp.swift */,
+				000000000000000000000119 /* UsageAnalytics.swift */,
 				000000000000000000000102 /* RootView.swift */,
 				000000000000000000000110 /* DashSessionCoordinator.swift */,
 			);
@@ -320,6 +323,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				000000000000000000000201 /* RideDashApp.swift in Sources */,
+				000000000000000000000217 /* UsageAnalytics.swift in Sources */,
 				000000000000000000000202 /* RootView.swift in Sources */,
 				000000000000000000000203 /* DiagnosticsView.swift in Sources */,
 				000000000000000000000204 /* TripperWiFiManager.swift in Sources */,

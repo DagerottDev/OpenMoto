@@ -75,9 +75,10 @@ final class DashSessionCoordinator: ObservableObject {
 
     private let maximumReconnectAttempts = 5
 
-    init(transport: DashTransport = DashTransport(), log: DiagnosticLog = DiagnosticLog()) {
+    init(transport: DashTransport? = nil, log: DiagnosticLog? = nil) {
+        let transport = transport ?? DashTransport()
         self.transport = transport
-        self.log = log
+        self.log = log ?? DiagnosticLog()
 
         transport.onDatagram = { [weak self] datagram in
             Task { @MainActor in self?.handle(datagram) }

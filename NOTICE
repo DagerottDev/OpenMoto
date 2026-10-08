@@ -5,7 +5,17 @@ RideDash is an independent, brand-neutral motorcycle navigation and ride compani
 
 The compatible-display interoperability layer is based on publicly available interoperability research and clean-room reimplementation using public iOS APIs. The project does not include manufacturer firmware, private keys, proprietary certificates, extracted assets, or safety-critical vehicle-control functionality.
 
-Some protocol behavior and packet sequencing were informed by publicly available open-source projects and research notes, including OpenDash / better-dash style motorcycle display interoperability work. Review and preserve the license notices of any third-party source code that is directly incorporated in future changes.
+Protocol reference packets, behavior and packet sequencing were informed by these public Apache-2.0 interoperability projects:
+
+- better-dash, OpenMotoDash contributors
+  https://github.com/OpenMotoDash/better-dash
+- OpenDash, Copyright 2026 Subtle Sayak and contributors
+  https://github.com/subtlesayak/open-dash
+  OpenDash acknowledges NorthStar, Copyright 2026 Aditya Dasika
+  (https://github.com/adityadasika21/NorthStar), and better-dash
+  (https://github.com/norbertFeron/better-dash).
+
+RideDash uses a Swift/iOS implementation and changes the rendering, transport and app integration. The common Apache License, Version 2.0 is included in LICENSE. Preserve upstream license and notice text when incorporating third-party source code.
 
 Royal Enfield, Tripper, and any other third-party product or company names are trademarks of their respective owners. RideDash is not affiliated with, endorsed by, or sponsored by those trademark owners.
 

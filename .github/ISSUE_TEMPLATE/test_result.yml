@@ -1,0 +1,57 @@
+name: Tester feedback / hardware result
+description: Share a passing or failing test; both are useful.
+title: "[Test]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for testing. Start with Docs/TESTING.md. Initial display tests must be stationary, on hardware you own or are authorized to test. A pass applies only to the recorded configuration.
+  - type: input
+    id: version
+    attributes:
+      label: Commit SHA and Xcode version
+    validations:
+      required: true
+  - type: input
+    id: phone
+    attributes:
+      label: iPhone model and iOS version (or Simulator)
+    validations:
+      required: true
+  - type: input
+    id: display
+    attributes:
+      label: Motorcycle / display model and exact firmware
+      description: Enter app-only if no display was used. Do not include registration numbers or raw SSIDs.
+    validations:
+      required: true
+  - type: textarea
+    id: stages
+    attributes:
+      label: Checks performed and result for each
+      description: Record pass, fail or not tested for each app check or manual hardware stage. Include settings and duration for projection/endurance tests.
+    validations:
+      required: true
+  - type: dropdown
+    id: recovery
+    attributes:
+      label: Did normal display information recover after stopping?
+      options:
+        - Not applicable — app-only test
+        - Yes
+        - No — stopped testing
+        - Not tested
+    validations:
+      required: true
+  - type: textarea
+    id: observations
+    attributes:
+      label: Observations and sanitized evidence
+      description: Include reproduction details for failures. Remove personal routes, raw SSIDs, keys and credentials from logs/screenshots.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Test scope and privacy
+      options:
+        - label: I used authorized hardware (or app-only testing), followed the safety guide, and removed personal information and secrets.
+          required: true

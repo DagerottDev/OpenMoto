@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Tester guide
+    url: https://github.com/DagerottDev/RideDash/blob/main/Docs/TESTING.md
+    about: Start here for source installation, app-only tests and staged hardware testing.
+  - name: Private vulnerability report
+    url: https://github.com/DagerottDev/RideDash/security/advisories/new
+    about: Keep sensitive security reports out of public issues.

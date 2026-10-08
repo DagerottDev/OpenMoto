@@ -25,7 +25,7 @@ Do **not** commit the Wi-Fi password, authentication session key, private key ma
 
 ## Xcode setup
 
-1. Clone `DagerottDev/RideDash` and check out the `phase-1-connectivity-diagnostics` branch (or the eventual merged branch).
+1. Clone `DagerottDev/RideDash` and check out the default `main` branch.
 2. Open `RideDash.xcodeproj` in Xcode 16 or newer.
 3. Select your Apple Development team for the `RideDash` and `RideDashShare` targets.
 4. Change bundle identifiers if your signing account requires it.

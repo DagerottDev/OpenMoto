@@ -155,7 +155,8 @@ final class NavigationViewModel: ObservableObject {
     private let deviationThresholdMeters: CLLocationDistance = 75
     private let recalculationCooldown: TimeInterval = 20
 
-    init(locationService: NavigationLocationService = NavigationLocationService()) {
+    init(locationService: NavigationLocationService? = nil) {
+        let locationService = locationService ?? NavigationLocationService()
         self.locationService = locationService
         locationService.$location
             .sink { [weak self] location in self?.handleLocation(location) }

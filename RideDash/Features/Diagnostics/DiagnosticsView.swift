@@ -68,11 +68,13 @@ struct DiagnosticsView: View {
     }
 
     private var deviceHealthSection: some View {
-        Section("Device health") {
+        Section {
             LabeledContent("Thermal", value: deviceHealth.thermalStateText)
             LabeledContent("Battery", value: deviceHealth.batteryLevelText)
             LabeledContent("Battery state", value: deviceHealth.batteryStateText)
             LabeledContent("Low Power Mode", value: deviceHealth.lowPowerMode ? "On" : "Off")
+        } header: {
+            Text("Device health")
         } footer: {
             Text("Use these values during 30/60/120-minute projection tests to correlate throttling, battery drain and stream instability.")
         }
@@ -160,7 +162,7 @@ struct DiagnosticsView: View {
     }
 
     private var selfCheckSection: some View {
-        Section("Local self-check") {
+        Section {
             Button("Run Protocol + RTP Self-Check") {
                 let result = ProtocolSelfCheck.run()
                 selfCheckResult = result
@@ -178,6 +180,8 @@ struct DiagnosticsView: View {
                     .font(.caption)
                     .textSelection(.enabled)
             }
+        } header: {
+            Text("Local self-check")
         } footer: {
             Text("This performs deterministic in-app checks of K1G decoding/sequence patching, route-card generation and RTP/FU-A packet construction. It sends nothing to the motorcycle.")
         }

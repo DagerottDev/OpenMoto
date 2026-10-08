@@ -20,6 +20,10 @@
     <string>$(CURRENT_PROJECT_VERSION)</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
+    <key>TelemetryDeckAppID</key>
+    <string>C0E60A0B-33A5-4CCB-9876-6E28A586F2F0</string>
+    <key>TelemetryDeckNamespace</key>
+    <string>dev.dagerott.ridedash</string>
     <key>NSLocalNetworkUsageDescription</key>
     <string>RideDash uses the local network to connect to a compatible motorcycle display for navigation and diagnostics.</string>
     <key>NSLocationWhenInUseUsageDescription</key>

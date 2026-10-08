@@ -3,16 +3,21 @@
 ![Swift][swift-shield]
 ![iOS 17+][ios-shield]
 ![Xcode 16+][xcode-shield]
+![Testing phase](https://img.shields.io/badge/status-testing%20phase-orange?style=for-the-badge)
+![Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge)
 
 <div align="center">
   <h1>RideDash</h1>
   <p>A native iOS motorcycle navigation and ride companion with experimental Wi-Fi display projection.</p>
+  <p><strong>Testing phase — looking for iPhone testers and authorized display owners.</strong></p>
   <p>
+    <a href="Docs/TESTING.md">Start Testing</a>
+    &middot;
     <a href="Docs/IMPLEMENTATION_STATUS.md">Implementation Status</a>
     &middot;
     <a href="Docs/MANUAL_TEST_GUIDE.md">Hardware Test Guide</a>
     &middot;
-    <a href="https://github.com/DagerottDev/RideDash/issues">Report Bug or Request Feature</a>
+    <a href="https://github.com/DagerottDev/RideDash/issues/new/choose">Report Bug or Request Feature</a>
   </p>
 </div>
 
@@ -31,6 +36,7 @@
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
+    <li><a href="#testers-wanted">Testers Wanted</a></li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#display-compatibility-and-limitations">Display Compatibility and Limitations</a></li>
     <li><a href="#development-and-validation">Development and Validation</a></li>
@@ -60,9 +66,9 @@ RideDash is independent and brand-neutral. Display integration is limited to nav
 
 ### Current Status
 
-The [implementation checklist](Docs/IMPLEMENTATION_STATUS.md) records the planned first hardware beta as **code-complete, with hardware validation still pending**. Xcode compile/sign/install on the target iPhone, display authentication, projection, controls, reconnect, and endurance behavior remain unverified in the [hardware test matrix](Docs/HARDWARE_TEST_MATRIX.md).
+The [implementation checklist](Docs/IMPLEMENTATION_STATUS.md) records the planned first hardware beta as **code-complete, with hardware validation still pending**. Unsigned Simulator Debug and iPhone Release compiles have passed on Xcode 27; signing/install on a physical iPhone, display authentication, projection, controls, reconnect, and endurance behavior remain unverified in the [hardware test matrix](Docs/HARDWARE_TEST_MATRIX.md).
 
-There are no published GitHub releases. Build from source; do not treat the current implementation as production-ready or assume compatibility with a particular display firmware. CI/CD is intentionally not used: final integration validation is manual on a physical iPhone and a display you own or are authorized to test.
+There are no published GitHub releases or packaged downloads (DMG/IPA). The maintainer does not currently have an Apple Developer Program account. Build from source; do not treat the current implementation as production-ready or assume compatibility with a particular display firmware. CI/CD is intentionally not used: final integration validation is manual on a physical iPhone and a display you own or are authorized to test.
 
 ### Built With
 
@@ -86,7 +92,6 @@ The project uses Apple frameworks without third-party package dependencies.
 ### Prerequisites
 
 - A Mac with **Xcode 16 or newer** and its iOS SDK. The project uses Swift 5 language mode and targets **iOS 17.0+**.
-- Access to this private repository through your GitHub account.
 - An Apple Development signing team for installing on a physical iPhone.
 - A physical iPhone running iOS 17 or newer for display integration. Simulator cannot validate accessory Wi-Fi or actual display projection.
 - Internet access for MapKit destination search and route calculation.
@@ -102,14 +107,26 @@ The project uses Apple frameworks without third-party package dependencies.
    open RideDash.xcodeproj
    ```
 
-   If you already have a checkout, open its existing `RideDash.xcodeproj`. No package-manager installation or environment-variable configuration is required.
+   If you already have a checkout, open its existing `RideDash.xcodeproj`. No package-manager installation or environment-variable configuration is required. Optional TelemetryDeck screen analytics is off by default and disabled in Debug/Simulator; see [PRIVACY.md](PRIVACY.md) for the public release configuration and fork setup.
 
 2. In **Signing & Capabilities**, select your Apple Development team for both **RideDash** and **RideDashShare**. Change bundle identifiers if required by your signing account; keep the extension identifier under the app identifier.
 3. Confirm the **Hotspot Configuration** capability is enabled for the RideDash target. The committed app configuration includes Local Network and Location usage descriptions and the location background mode.
 4. Select the **RideDash** scheme and your physical iPhone, then use **Product → Run** to build, sign, and install.
 5. Grant Location permission for routing and Local Network permission when testing the display connection. Notification permission is used for maintenance reminders.
 
-Before connecting hardware, read the [Manual Hardware Test Guide](Docs/MANUAL_TEST_GUIDE.md). Its branch references describe the original implementation workflow; the current repository default is `main`.
+Before connecting hardware, read the [Tester Guide](Docs/TESTING.md) and [Manual Hardware Test Guide](Docs/MANUAL_TEST_GUIDE.md).
+
+<p align="right"><a href="#readme-top">Back to top</a></p>
+
+## Testers Wanted
+
+**RideDash is currently in testing, and we need testers.** This is an experimental source-build preview; hardware compatibility and reliable projection are not yet established. There is no App Store or TestFlight download.
+
+- **iPhone app testers:** check installation, navigation, garage/fuel/maintenance records, expense CSV export, ride records, and permissions.
+- **Authorized display owners:** follow the staged hardware guide, beginning with stationary Wi-Fi and authentication tests. Record both passes and failures, including firmware and normal-display recovery.
+- **Swift contributors:** help reproduce bugs, improve accessibility, and review the existing navigation and interoperability implementation.
+
+Start with [Docs/TESTING.md](Docs/TESTING.md), then submit a [test result, bug, or feature request](https://github.com/DagerottDev/RideDash/issues/new/choose). Remove personal information from logs and screenshots before posting.
 
 <p align="right"><a href="#readme-top">Back to top</a></p>
 
@@ -162,13 +179,13 @@ Host, broadcast, ports, frame rate, and bitrate are editable in **Connection & P
 - **Native display maneuver metadata:** the nav-info heartbeat currently uses a generic continue/500 m placeholder. Actual turn instructions are rendered into the H.264 projection.
 - **Firmware and controls:** known inputs and packet sequencing still require physical validation. Keep unknown packet families read-only until understood.
 - **Safety:** do not test new protocol behavior while moving. Stop testing if the normal speed/fuel/warning display does not recover after projection stops.
-- **Privacy:** enter Wi-Fi credentials only on the device. Never commit passwords, session keys, private key material, raw secret-bearing captures, or precise personal route history. Review diagnostic exports before sharing.
+- **Privacy:** see [PRIVACY.md](PRIVACY.md) for local storage and optional screen analytics. Enter Wi-Fi credentials only on the device. Never commit passwords, session keys, private key material, raw secret-bearing captures, or precise personal route history. Review diagnostic exports before sharing.
 
 <p align="right"><a href="#readme-top">Back to top</a></p>
 
 ## Development and Validation
 
-Build and run manually in Xcode as described above. There is no CI workflow or standalone automated test target in this checkout. The in-app **Settings → Diagnostics → Run Protocol + RTP Self-Check** checks K1G decoding, sequence patching, route-card generation, and RTP/FU-A packet construction without network traffic; it does not establish hardware compatibility.
+Build and run manually in Xcode as described above. There is no CI workflow or Xcode test target in this checkout. Deterministic analytics checks are documented in [CONTRIBUTING.md](CONTRIBUTING.md). The in-app **Settings → Diagnostics → Run Protocol + RTP Self-Check** checks K1G decoding, sequence patching, route-card generation, and RTP/FU-A packet construction without network traffic; it does not establish hardware compatibility.
 
 | Source area | Responsibility |
 |---|---|
@@ -195,7 +212,8 @@ Use the existing documentation for the full validation record:
 
 The documented next work is validation of the existing implementation:
 
-- [ ] Compile, sign, and install on the target iPhone; run the local self-check.
+- [x] Compile an unsigned Simulator build on Xcode 27.
+- [ ] Sign and install on the target iPhone; run the local self-check.
 - [ ] Verify firmware-specific endpoints, authentication across cold ignition cycles, and clean navigation-mode entry/exit.
 - [ ] Validate the calibration stream, live route projection, and physical LEFT/RIGHT/DOWN/CLICK inputs.
 - [ ] Measure reconnect, phone-lock/background behavior, and 30/60-minute thermal, battery, and network stability.
@@ -207,7 +225,7 @@ See the [Project Plan](Docs/PROJECT_PLAN.md) for detailed acceptance criteria an
 
 ## Contributing
 
-Repository collaborators can discuss changes through [issues][issues-url] and pull requests. Build/run relevant changes in Xcode, run the local protocol/RTP self-check for interoperability changes, and record hardware results when applicable. Preserve the safety boundary and keep credentials, keys, and personal route history out of contributions.
+Contributions and tester feedback are welcome through the [issue forms](https://github.com/DagerottDev/RideDash/issues/new/choose) and pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md). Build/run relevant changes in Xcode, run the local protocol/RTP self-check for interoperability changes, and record hardware results when applicable. Preserve the safety boundary and keep credentials, keys, and personal route history out of contributions.
 
 For hardware failures, include the test stage, display firmware, iPhone/iOS version, protocol settings, observed state, sanitized logs, and whether the normal display recovered after stopping. Use the [failure-reporting guide](Docs/MANUAL_TEST_GUIDE.md#failure-reporting).
 
@@ -215,13 +233,13 @@ For hardware failures, include the test stage, display firmware, iPhone/iOS vers
 
 ## License
 
-No license file is present in this repository. [NOTICE](NOTICE) records copyright, interoperability context, trademark acknowledgments, and safety exclusions; it does not provide a software license.
+Licensed under the [Apache License, Version 2.0](LICENSE). Preserve [NOTICE](NOTICE), which records copyright, interoperability references, trademark acknowledgments, and the project safety scope. The safety scope describes what maintainers accept into this project; it does not add restrictions to the license.
 
 <p align="right"><a href="#readme-top">Back to top</a></p>
 
 ## Contact
 
-Project support and feature discussions: [RideDash issues][issues-url] (repository access required).
+Project support and feature discussions: [RideDash issues][issues-url].
 
 <p align="right"><a href="#readme-top">Back to top</a></p>
 
