@@ -2,6 +2,14 @@
 
 Publication scope: X, the maintainer's Reddit profile, and r/SideProject. Build-from-source testing preview only; no packaged release or App Store/TestFlight availability is implied.
 
+Published on 8 October 2026:
+
+- [X announcement](https://x.com/Rajveer761SM/status/2108113304677945785)
+- [Reddit profile announcement](https://www.reddit.com/user/Then_Leg8802/comments/1x0lnt1/ridedash_an_opensource_ios_motorcycle_companion/)
+- [r/SideProject announcement](https://www.reddit.com/r/SideProject/comments/1x0lltm/ridedash_an_opensource_ios_motorcycle_companion/)
+
+Each post was verified on its published page. Community moderation and future visibility may change.
+
 ## X
 
 RideDash is open source and in testing 🏍️
