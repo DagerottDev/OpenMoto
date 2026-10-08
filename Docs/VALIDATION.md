@@ -20,3 +20,22 @@ The compile exposed existing blockers, corrected here: main-actor dependencies w
 The compiler still reports the existing CLLocationManagerDelegate actor-isolation and RootView capture-ownership warnings in Swift 5 mode. A Swift 6 migration needs separate validation. Xcode also reports skipped AppIntents metadata extraction because this app has no AppIntents dependency.
 
 This record does not claim an installed app, physical hardware compatibility, a signed artifact or a packaged release. No DMG, IPA, TestFlight or App Store release is produced.
+
+
+## OpenMoto rename validation — 8 October 2026
+
+The app, share extension, Xcode project/targets, source directories, UI strings, projection/diagnostic labels, documentation, issue templates and new analytics event/property names use OpenMoto.
+
+Completed for the rename:
+
+- Unsigned Simulator Debug and iPhone Release builds passed with Xcode 27.0, including the renamed share extension. The initial sandboxed compile could not execute Swift macro plugins; the build passed outside that sandbox. Existing concurrency/capture warnings remain as described above.
+- The standalone analytics contract check passed with the OpenMoto event/property allowlist and intercepted network requests.
+- A Foundation-only Swift self-check compiled the actual `importURL` method extracted from the navigation source. It passed new and legacy schemes, mixed-case schemes/query aliases, percent-encoded destination text, external URLs and absent-query behavior. This is a method check, not a full navigation-view or extension hand-off test.
+- App/share display names, new and legacy URL registrations, Xcode plist/entitlement paths, plist/project syntax, issue-form YAML and relative Markdown links passed checks. The staged rename diff was reviewed and `git diff --check` passed.
+- The rename was pushed to GitHub and the remote `main` SHA matched the local commit. The renamed repository and profile links were verified through GitHub's API. Public announcement verification is recorded in [LAUNCH_POSTS.md](LAUNCH_POSTS.md).
+
+Intentional compatibility references retain the former name: installed-app/extension bundle IDs, the SwiftData model module name, `ridedash://` URL support, the analytics ingestion namespace, historical records and permanent social links. Model definitions, storage configuration and preference keys are unchanged. Physical-device upgrade/data-retention testing is still pending.
+
+A Simulator boot succeeded after an initial boot error, but installation stalled without returning a result. That test was stopped and the Simulator was shut down; no installed app, UI smoke test or runtime deep-link result is claimed. Physical iPhone/display validation and release analytics reporting remain pending.
+
+The local checkout directory is `OpenMoto`. A `Ride Dash` symlink points to it so existing chat/tool paths continue to resolve. Codex's saved project label remains unchanged because no supported project-rename tool is available and native control of Codex is blocked. The TelemetryDeck organization label also remains unchanged; its app display name is OpenMoto.

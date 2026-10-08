@@ -10,6 +10,13 @@ Original RideDash announcements published on 8 October 2026 (permanent URLs reta
 
 Each post was verified on its published page. Community moderation and future visibility may change.
 
+## OpenMoto rename update — 8 October 2026
+
+- [X rename reply](https://x.com/Rajveer761SM/status/2108225901154685094) published in the original launch conversation and verified on its own page.
+- Both Reddit announcement bodies above now start with **RideDash is now OpenMoto**, use OpenMoto throughout the project copy, and link to the renamed repository, tester guide and issue forms. Their saved, rendered bodies were verified. Reddit titles and permanent URL slugs retain the original name.
+- The GitHub repository is now [DagerottDev/OpenMoto](https://github.com/DagerottDev/OpenMoto), and the maintainer's [profile README](https://github.com/DagerottDev) uses the new name and canonical links.
+- The existing TelemetryDeck app display name is OpenMoto. Its app ID and ingestion namespace remain stable; the organization label still shows RideDash because no rename control was exposed in the inspected settings.
+
 The copy below reflects the current OpenMoto branding; it is not a verbatim archive of the original posts.
 
 ## X
